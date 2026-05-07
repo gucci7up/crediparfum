@@ -1,4 +1,4 @@
-import { DollarSign, Users, Package, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
+import { DollarSign, Users, Package, ArrowUpRight, ArrowDownRight, Clock, ShoppingCart } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const stats = [
