@@ -14,6 +14,22 @@ export default function POS() {
   const [itemQuantity, setItemQuantity] = useState(1);
   const [shippingCost, setShippingCost] = useState("");
 
+  const [businessSettings, setBusinessSettings] = useState({
+    business_name: "CREDIPARFUM",
+    business_logo: null,
+    business_address: "",
+    business_phone: ""
+  });
+
+  useEffect(() => {
+    fetch("/api/settings.php")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.business_name) setBusinessSettings(data);
+      })
+      .catch(err => console.error("Error loading settings in POS:", err));
+  }, []);
+
   useEffect(() => {
     window.onerror = function(msg, url, lineNo, columnNo, error) {
       alert("Error detectado: " + msg + "\nEn: " + url + "\nLínea: " + lineNo);
@@ -143,9 +159,13 @@ export default function POS() {
       {lastInvoice && (
         <div className="print-container text-black font-mono">
           <div className="text-center border-b border-dashed border-black pb-2 mb-2">
-            <h1 className="text-lg font-bold">CREDIPARFUM</h1>
-            <p className="text-xs">Perfumería Profesional</p>
-            <p className="text-[10px]">{lastInvoice.date}</p>
+            {businessSettings.business_logo && (
+              <img src={businessSettings.business_logo} alt="Logo" className="w-20 mx-auto mb-2" />
+            )}
+            <h1 className="text-lg font-bold uppercase">{businessSettings.business_name}</h1>
+            {businessSettings.business_address && <p className="text-[10px]">{businessSettings.business_address}</p>}
+            {businessSettings.business_phone && <p className="text-[10px]">Tel: {businessSettings.business_phone}</p>}
+            <p className="text-[10px] mt-1">{lastInvoice.date}</p>
           </div>
           
           <div className="text-[10px] mb-2">

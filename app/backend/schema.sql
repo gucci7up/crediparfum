@@ -41,3 +41,14 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_method VARCHAR(50),
     FOREIGN KEY (invoice_id) REFERENCES invoices(id)
 );
+
+CREATE TABLE IF NOT EXISTS settings (
+    id INT PRIMARY KEY DEFAULT 1,
+    business_name VARCHAR(255) DEFAULT 'CrediParfum',
+    business_logo LONGTEXT,
+    business_address TEXT,
+    business_phone VARCHAR(50),
+    currency VARCHAR(10) DEFAULT '$'
+);
+
+INSERT IGNORE INTO settings (id, business_name) VALUES (1, 'CrediParfum');

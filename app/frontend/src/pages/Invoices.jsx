@@ -9,6 +9,13 @@ export default function Invoices() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [businessSettings, setBusinessSettings] = useState({
+    business_name: "CREDIPARFUM",
+    business_logo: null,
+    business_address: "",
+    business_phone: ""
+  });
+
   const fetchInvoices = () => {
     setLoading(true);
     fetch('/api/invoices.php')
@@ -30,6 +37,12 @@ export default function Invoices() {
 
   useEffect(() => {
     fetchInvoices();
+    fetch("/api/settings.php")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.business_name) setBusinessSettings(data);
+      })
+      .catch(err => console.error("Error loading settings in Invoices:", err));
   }, []);
 
   const viewInvoice = (id) => {
@@ -236,9 +249,13 @@ export default function Invoices() {
           {/* Versión para Impresión (Misma que POS pero para este modal) */}
           <div className="print-container text-black font-mono">
             <div className="text-center border-b border-dashed border-black pb-2 mb-2">
-              <h1 className="text-lg font-bold">CREDIPARFUM</h1>
-              <p className="text-xs">Perfumería Profesional</p>
-              <p className="text-[10px]">{new Date(selectedInvoice.date).toLocaleString()}</p>
+              {businessSettings.business_logo && (
+                <img src={businessSettings.business_logo} alt="Logo" className="w-20 mx-auto mb-2" />
+              )}
+              <h1 className="text-lg font-bold uppercase">{businessSettings.business_name}</h1>
+              {businessSettings.business_address && <p className="text-[10px]">{businessSettings.business_address}</p>}
+              {businessSettings.business_phone && <p className="text-[10px]">Tel: {businessSettings.business_phone}</p>}
+              <p className="text-[10px] mt-1">{new Date(selectedInvoice.date).toLocaleString()}</p>
             </div>
             <div className="text-[10px] mb-2">
               <p><strong>FACTURA:</strong> #{selectedInvoice.id}</p>

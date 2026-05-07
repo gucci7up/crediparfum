@@ -4,8 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Clients from "./pages/Clients";
 import Invoices from "./pages/Invoices";
-
-const Settings = () => <div className="text-slate-600">Configuración - En construcción</div>;
+import Settings from "./pages/Settings";
 
 function App() {
   return (

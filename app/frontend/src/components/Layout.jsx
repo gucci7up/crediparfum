@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Search, Bell, FileText } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -12,17 +13,38 @@ const navigation = [
 
 export default function Layout() {
   const location = useLocation();
+  const [businessSettings, setBusinessSettings] = useState({
+    business_name: "CrediParfum",
+    business_logo: null
+  });
+
+  useEffect(() => {
+    fetch("/api/settings.php")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.business_name) {
+          setBusinessSettings(data);
+        }
+      })
+      .catch(err => console.error("Error loading layout settings:", err));
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
       <div className="w-64 bg-slate-950 text-slate-300 flex flex-col fixed inset-y-0 z-50">
-        <div className="h-16 flex items-center px-6 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
-            <span className="text-white font-bold text-xl tracking-tight">CrediParfum</span>
+        <div className="h-20 flex items-center px-6 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            {businessSettings.business_logo ? (
+              <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white p-1">
+                <img src={businessSettings.business_logo} alt="Logo" className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary-500/20">
+                <span className="text-white font-bold text-xl">{businessSettings.business_name.charAt(0)}</span>
+              </div>
+            )}
+            <span className="text-white font-bold text-lg tracking-tight truncate">{businessSettings.business_name}</span>
           </div>
         </div>
         
