@@ -158,13 +158,13 @@ export default function POS() {
     document.body.appendChild(iframe);
     
     const doc = iframe.contentWindow.document;
-    const itemsHtml = lastInvoice.items.map(item => `
+    const itemsHtml = (lastInvoice.items || []).map(item => `
       <tr>
         <td>
-          ${item.description}<br/>
-          ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
+          ${item.description || 'Producto'}<br/>
+          ${item.quantity || 1} x $${Number(item.unit_price || 0).toFixed(2)}
         </td>
-        <td class="text-right">$${(Number(item.unit_price) * Number(item.quantity)).toFixed(2)}</td>
+        <td class="text-right">$${(Number(item.unit_price || 0) * Number(item.quantity || 1)).toFixed(2)}</td>
       </tr>
     `).join('');
 
@@ -194,7 +194,6 @@ export default function POS() {
           .mt-1 { margin-top: 4px; }
           .font-bold { font-weight: bold; }
           .uppercase { text-transform: uppercase; }
-          .text-sm { font-size: 12px; }
           .text-xs { font-size: 10px; }
           table { width: 100%; border-collapse: collapse; font-size: 10px; }
           th { border-bottom: 1px dashed #000; text-align: left; padding: 4px 0; }
@@ -208,15 +207,15 @@ export default function POS() {
         <div class="ticket" id="pdf-content">
           <div class="text-center border-b pb-2 mb-2">
             ${logoHtml}
-            <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name}</h1>
+            <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name || 'CrediParfum'}</h1>
             ${addressHtml}
             ${phoneHtml}
-            <p class="text-xs mt-1">${lastInvoice.date}</p>
+            <p class="text-xs mt-1">${lastInvoice.date || new Date().toLocaleString()}</p>
           </div>
           <div class="text-xs mb-2">
-            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${lastInvoice.id}</p>
-            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> ${lastInvoice.client_name}</p>
-            <p style="margin: 2px 0;"><strong>TIPO:</strong> ${lastInvoice.type}</p>
+            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${lastInvoice.id || '000'}</p>
+            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> ${lastInvoice.client_name || 'General'}</p>
+            <p style="margin: 2px 0;"><strong>TIPO:</strong> ${lastInvoice.type || 'Contado'}</p>
           </div>
           <table>
             <thead>
@@ -232,15 +231,15 @@ export default function POS() {
           <div class="text-xs border-b pb-2" style="margin-top: 8px;">
             <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span>Subtotal:</span>
-              <span>$${(Number(lastInvoice.total) - Number(lastInvoice.shipping)).toFixed(2)}</span>
+              <span>$${(Number(lastInvoice.total || 0) - Number(lastInvoice.shipping || 0)).toFixed(2)}</span>
             </div>
             <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span>Envío:</span>
-              <span>$${Number(lastInvoice.shipping).toFixed(2)}</span>
+              <span>$${Number(lastInvoice.shipping || 0).toFixed(2)}</span>
             </div>
             <div class="flex-between font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
               <span>TOTAL:</span>
-              <span>$${Number(lastInvoice.total).toFixed(2)}</span>
+              <span>$${Number(lastInvoice.total || 0).toFixed(2)}</span>
             </div>
           </div>
           <div class="text-center mt-4 text-xs">
@@ -248,20 +247,28 @@ export default function POS() {
           </div>
         </div>
         <script>
-          window.generatePDF = function() {
+          window.onload = function() {
             const element = document.getElementById('pdf-content');
             const opt = {
               margin: 0,
-              filename: 'Factura_${lastInvoice.id}.pdf',
+              filename: 'Factura_${lastInvoice.id || "000"}.pdf',
               image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 3, useCORS: true },
-              jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+              html2canvas: { scale: 2, useCORS: true, logging: false },
+              jsPDF: { unit: 'mm', format: [80, 250], orientation: 'portrait' }
             };
-            html2pdf().from(element).set(opt).save().then(() => {
-              window.parent.postMessage('pdf-done', '*');
-            }).catch(err => {
-              window.parent.postMessage('pdf-error:' + err.message, '*');
-            });
+            
+            // Give extra time for fonts and potential images
+            setTimeout(() => {
+              if (typeof html2pdf === 'undefined') {
+                window.parent.postMessage('pdf-error:Biblioteca html2pdf no cargada', '*');
+                return;
+              }
+              html2pdf().from(element).set(opt).save().then(() => {
+                window.parent.postMessage('pdf-done', '*');
+              }).catch(err => {
+                window.parent.postMessage('pdf-error:' + err.message, '*');
+              });
+            }, 800);
           };
         </script>
       </body>
@@ -280,12 +287,6 @@ export default function POS() {
       }
     };
     window.addEventListener('message', handleMessage);
-
-    setTimeout(() => {
-      if (iframe.contentWindow && iframe.contentWindow.generatePDF) {
-        iframe.contentWindow.generatePDF();
-      }
-    }, 1000);
   };
 
   const handlePrint = () => {
