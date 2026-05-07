@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Search, Bell } from "lucide-react";
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Search, Bell, FileText } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const navigation = [
