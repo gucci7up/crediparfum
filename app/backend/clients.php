@@ -5,31 +5,37 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        // Obtener todos los clientes o uno específico
-        if (isset($_GET['id'])) {
-            $stmt = $pdo->prepare("SELECT * FROM clients WHERE id = ?");
-            $stmt->execute([$_GET['id']]);
-            $client = $stmt->fetch();
-            if ($client) {
-                echo json_encode($client);
+        try {
+            // Obtener todos los clientes o uno específico
+            if (isset($_GET['id'])) {
+                $stmt = $pdo->prepare("SELECT * FROM clients WHERE id = ?");
+                $stmt->execute([$_GET['id']]);
+                $client = $stmt->fetch();
+                if ($client) {
+                    echo json_encode($client);
+                } else {
+                    http_response_code(404);
+                    echo json_encode(["error" => "Cliente no encontrado"]);
+                }
             } else {
-                http_response_code(404);
-                echo json_encode(["error" => "Cliente no encontrado"]);
+                $query = "
+                    SELECT 
+                        c.*,
+                        COALESCE((SELECT SUM(total_amount) FROM invoices WHERE client_id = c.id AND type = 'credit'), 0) - 
+                        COALESCE((SELECT SUM(amount) FROM payments p JOIN invoices i ON p.invoice_id = i.id WHERE i.client_id = c.id AND i.type = 'credit'), 0) 
+                        AS current_debt
+                    FROM clients c
+                    ORDER BY c.name ASC
+                ";
+                $stmt = $pdo->query($query);
+                echo json_encode($stmt->fetchAll());
             }
-        } else {
-            // Obtener saldo total adeudado calculando de facturas y pagos (opcional, por ahora solo traemos los clientes)
-            // Para ser profesionales, vamos a traer el cliente y su deuda actual calculada
-            $query = "
-                SELECT 
-                    c.*,
-                    COALESCE((SELECT SUM(total_amount) FROM invoices WHERE client_id = c.id AND type = 'credit'), 0) - 
-                    COALESCE((SELECT SUM(amount) FROM payments p JOIN invoices i ON p.invoice_id = i.id WHERE i.client_id = c.id AND i.type = 'credit'), 0) 
-                    AS current_debt
-                FROM clients c
-                ORDER BY c.name ASC
-            ";
-            $stmt = $pdo->query($query);
-            echo json_encode($stmt->fetchAll());
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Error de base de datos", "details" => $e->getMessage(), "query" => $query ?? 'n/a']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Error inesperado", "details" => $e->getMessage()]);
         }
         break;
 

@@ -15,10 +15,28 @@ export default function POS() {
   const [shippingCost, setShippingCost] = useState("");
 
   useEffect(() => {
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      alert("Error detectado: " + msg + "\nEn: " + url + "\nLínea: " + lineNo);
+      return false;
+    };
+  }, []);
+
+  useEffect(() => {
     // Load clients
     fetch('/api/clients.php')
       .then(res => res.json())
-      .then(data => setClients(data));
+      .then(data => {
+        if (Array.isArray(data)) {
+          setClients(data);
+        } else {
+          console.error("Clients data is not an array:", data);
+          setClients([]);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch clients:", err);
+        setClients([]);
+      });
   }, []);
 
   const handleAddItem = (e) => {
@@ -68,8 +86,7 @@ export default function POS() {
     try {
       const invoiceData = {
         client_id: selectedClient,
-        total: total,
-        status: paymentType === 'cash' ? 'paid' : 'pending',
+        type: paymentType,
         shipping_cost: parsedShipping,
         items: cart.map(item => ({
           description: item.description,
@@ -85,7 +102,7 @@ export default function POS() {
       });
       
       const data = await res.json();
-      if (data.id) {
+      if (data.invoice_id || data.success) {
         alert("Factura creada con éxito!");
         setCart([]);
         setSelectedClient("");

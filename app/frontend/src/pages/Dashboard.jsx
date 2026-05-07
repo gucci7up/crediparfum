@@ -1,44 +1,40 @@
+import { useState, useEffect } from "react";
 import { DollarSign, Users, Package, ArrowUpRight, ArrowDownRight, Clock, ShoppingCart } from "lucide-react";
 import { cn } from "../lib/utils";
 
-const stats = [
-  {
-    name: 'Ingresos Mensuales',
-    value: '$12,450.00',
-    trend: '+12.5%',
-    isPositive: true,
-    icon: DollarSign,
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-500/10'
-  },
-  {
-    name: 'Cuentas por Cobrar',
-    value: '$4,230.00',
-    trend: '-2.4%',
-    isPositive: true,
-    icon: Clock,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-500/10'
-  },
-  {
-    name: 'Clientes Activos',
-    value: '142',
-    trend: '+5.2%',
-    isPositive: true,
-    icon: Users,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10'
-  }
-];
-
-const recentTransactions = [
-  { id: 'INV-001', client: 'María Fernández', amount: '$150.00', status: 'Pagado', date: 'Hace 2 horas', type: 'Venta' },
-  { id: 'PAY-042', client: 'Carlos Ruiz', amount: '$50.00', status: 'Abono', date: 'Hace 5 horas', type: 'Abono' },
-  { id: 'INV-002', client: 'Laura Gómez', amount: '$210.00', status: 'Crédito', date: 'Ayer', type: 'Venta' },
-  { id: 'INV-003', client: 'Ana Martínez', amount: '$85.00', status: 'Pagado', date: 'Ayer', type: 'Venta' },
-];
-
 export default function Dashboard() {
+  const [data, setData] = useState({
+    stats: [
+      { name: 'Ingresos Mensuales', value: '$0.00', trend: '0%', isPositive: true, icon: DollarSign, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+      { name: 'Cuentas por Cobrar', value: '$0.00', trend: '0%', isPositive: true, icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
+      { name: 'Clientes Activos', value: '0', trend: '0%', isPositive: true, icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/10' }
+    ],
+    recentActivity: []
+  });
+
+  useEffect(() => {
+    fetch('/api/dashboard_stats.php')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.stats) {
+          // Map icons back to stats
+          const statsWithIcons = resData.stats.map(s => {
+            if (s.id === 'monthly_income') return { ...s, icon: DollarSign, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' };
+            if (s.id === 'accounts_receivable') return { ...s, icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-500/10' };
+            if (s.id === 'active_clients') return { ...s, icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/10' };
+            return s;
+          });
+          setData({
+            stats: statsWithIcons,
+            recentActivity: Array.isArray(resData.recentActivity) ? resData.recentActivity : []
+          });
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching dashboard stats:", err);
+      });
+  }, []);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -47,9 +43,9 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {data.stats.map((stat) => {
+          const Icon = stat.icon || DollarSign;
           return (
             <div key={stat.name} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
@@ -82,30 +78,34 @@ export default function Dashboard() {
           </div>
           <div className="p-6">
             <div className="space-y-6">
-              {recentTransactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-50 group-hover:text-primary-600 group-hover:border-primary-100 transition-colors">
-                      {tx.type === 'Venta' ? <ShoppingCart className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
+              {data.recentActivity.length === 0 ? (
+                <p className="text-slate-500 text-center py-4 text-sm">No hay actividad reciente</p>
+              ) : (
+                data.recentActivity.map((tx) => (
+                  <div key={tx.tx_id} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-50 group-hover:text-primary-600 group-hover:border-primary-100 transition-colors">
+                        {tx.type === 'Venta' ? <ShoppingCart className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{tx.client}</p>
+                        <p className="text-xs text-slate-500">{tx.tx_id} • {tx.date}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">{tx.client}</p>
-                      <p className="text-xs text-slate-500">{tx.id} • {tx.date}</p>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-900">${parseFloat(tx.amount).toFixed(2)}</p>
+                      <span className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1",
+                        tx.status === 'paid' || tx.status === 'Pagado' ? "bg-emerald-100 text-emerald-800" :
+                        tx.status === 'Abono' ? "bg-blue-100 text-blue-800" :
+                        "bg-amber-100 text-amber-800"
+                      )}>
+                        {tx.status === 'paid' ? 'Pagado' : tx.status === 'pending' ? 'Pendiente' : tx.status}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-slate-900">{tx.amount}</p>
-                    <span className={cn(
-                      "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1",
-                      tx.status === 'Pagado' ? "bg-emerald-100 text-emerald-800" :
-                      tx.status === 'Abono' ? "bg-blue-100 text-blue-800" :
-                      "bg-amber-100 text-amber-800"
-                    )}>
-                      {tx.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

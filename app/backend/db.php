@@ -15,14 +15,37 @@ $user = getenv('DB_USER') ?: 'root';
 $pass = getenv('DB_PASS') ?: 'rootpassword';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
-    // Configurar PDO para que lance excepciones en caso de error
+    // 1. Conectar al servidor MySQL sin especificar base de datos primero
+    $pdo = new PDO("mysql:host=$host;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    // Para que devuelva arrays asociativos por defecto
+    
+    // 2. Crear la base de datos si no existe
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbname` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    
+    // 3. Conectar a la base de datos específica
+    $pdo->exec("USE `$dbname` ");
+    
+    // 4. Verificar si las tablas existen, si no, crearlas
+    $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($tables)) {
+        $sql = file_get_contents(__DIR__ . '/schema.sql');
+        $pdo->exec($sql);
+    }
+    
+    // Re-conectar con la base de datos seleccionada para asegurar consistencia
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(["error" => "Error de conexión a la base de datos", "details" => $e->getMessage()]);
+    echo json_encode([
+        "error" => "Fallo total de conexión SQL",
+        "host" => $host,
+        "database" => $dbname,
+        "user" => $user,
+        "details" => $e->getMessage()
+    ]);
     exit();
 }
 ?>

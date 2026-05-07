@@ -10,11 +10,17 @@ export default function Clients() {
     fetch('/api/clients.php')
       .then(res => res.json())
       .then(data => {
-        setClients(data);
+        if (Array.isArray(data)) {
+          setClients(data);
+        } else {
+          console.error("Data is not an array:", data);
+          setClients([]);
+        }
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
+        console.error("Error fetching clients:", err);
+        setClients([]);
         setLoading(false);
       });
   }, []);
@@ -76,7 +82,7 @@ export default function Clients() {
                 </tr>
               ) : (
                 clients.map((client) => {
-                  const hasDebt = Number(client.total_debt) > 0;
+                  const hasDebt = Number(client.current_debt) > 0;
                   return (
                     <tr key={client.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
@@ -92,7 +98,7 @@ export default function Clients() {
                       <td className="px-6 py-4 text-right">${Number(client.credit_limit).toFixed(2)}</td>
                       <td className="px-6 py-4 text-right">
                         <span className={cn("font-medium", hasDebt ? "text-rose-600" : "text-slate-900")}>
-                          ${Number(client.total_debt).toFixed(2)}
+                          ${Number(client.current_debt).toFixed(2)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">

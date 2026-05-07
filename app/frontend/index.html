@@ -4,7 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>CrediParfum - Facturación Profesional</title>
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        var extra = !col ? '' : '\nColumna: ' + col;
+        extra += !error ? '' : '\nError: ' + error;
+        alert("CRASH DETECTADO:\n" + msg + "\nEn: " + url + "\nLínea: " + line + extra);
+        return false;
+      };
+      window.onunhandledrejection = function(event) {
+        alert("PROMISE REJECTED: " + event.reason);
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
