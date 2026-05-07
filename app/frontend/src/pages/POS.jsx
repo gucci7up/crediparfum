@@ -241,7 +241,14 @@ export default function POS() {
       margin: 0,
       filename: `Factura_${lastInvoice.id}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        onclone: (clonedDoc) => {
+          // Remove all stylesheets to prevent parsing oklch colors from main document
+          Array.from(clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')).forEach(el => el.remove());
+        }
+      },
       jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
     };
     
