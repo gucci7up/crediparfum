@@ -1,8 +1,0 @@
-CREATE DATABASE IF NOT EXISTS google_antigravity;
-USE google_antigravity;
-
-CREATE TABLE IF NOT EXISTS interactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    event_type VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

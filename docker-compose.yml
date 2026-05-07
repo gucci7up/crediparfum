@@ -3,7 +3,7 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: ./google-antigravity/frontend
+      context: ./app/frontend
       dockerfile: Dockerfile
     depends_on:
       - backend
@@ -21,11 +21,11 @@ services:
 
   backend:
     build:
-      context: ./google-antigravity/backend
+      context: ./app/backend
       dockerfile: Dockerfile
     environment:
       - DB_HOST=db
-      - DB_NAME=google_antigravity
+      - DB_NAME=crediparfum
       - DB_USER=root
       - DB_PASS=rootpassword
     depends_on:
@@ -36,11 +36,11 @@ services:
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=google_antigravity
+      - MYSQL_DATABASE=crediparfum
     volumes:
       - db_data:/var/lib/mysql
       # Inicializa la base de datos automáticamente
-      - ./google-antigravity/backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./app/backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
 volumes:
   db_data:
