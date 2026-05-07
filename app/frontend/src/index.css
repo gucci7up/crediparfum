@@ -26,31 +26,34 @@
     margin: 0;
   }
   
-  html, body {
-    width: 58mm;
-    height: auto;
-    background: white;
-    color: black;
-    font-size: 10pt;
+  body {
+    visibility: hidden;
     margin: 0;
     padding: 0;
-  }
-
-  /* Hide everything except the receipt */
-  #root > :not(.print-container),
-  .no-print {
-    display: none !important;
+    background: white;
   }
 
   .print-container {
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm !important;
     display: block !important;
-    width: 58mm;
     margin: 0;
     padding: 2mm;
     background: white;
+    color: black;
+    font-size: 10pt;
+    font-family: 'Courier New', Courier, monospace;
   }
 
-  /* Force background colors for print */
+  /* Hide everything else */
+  .no-print, header, nav, aside, button {
+    display: none !important;
+  }
+
+  /* Force background colors */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

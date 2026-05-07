@@ -30,6 +30,19 @@ try {
     if (empty($tables)) {
         $sql = file_get_contents(__DIR__ . '/schema.sql');
         $pdo->exec($sql);
+    } else {
+        // Asegurar que la tabla settings existe para actualizaciones incrementales
+        $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+            id INT PRIMARY KEY DEFAULT 1,
+            business_name VARCHAR(255) DEFAULT 'CrediParfum',
+            business_logo LONGTEXT,
+            business_address TEXT,
+            business_phone VARCHAR(50),
+            currency VARCHAR(10) DEFAULT '$'
+        )");
+        
+        // Insertar registro inicial si no existe
+        $pdo->exec("INSERT IGNORE INTO settings (id, business_name) VALUES (1, 'CrediParfum')");
     }
     
     // Re-conectar con la base de datos seleccionada para asegurar consistencia
