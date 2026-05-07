@@ -61,72 +61,112 @@ export default function Invoices() {
   };
 
   const downloadInvoicePDF = (id) => {
-    // If we have a selected invoice and it matches the ID, use it. 
-    // Otherwise fetch it first.
     const runDownload = (invoice) => {
-      const element = document.createElement('div');
-      element.innerHTML = `
-        <div style="padding: 20px; font-family: monospace; width: 300px; color: black; background: white;">
-          <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 10px; margin-bottom: 10px;">
-            ${businessSettings.business_logo ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 10px;" />` : ''}
-            <h2 style="margin: 0; text-transform: uppercase;">${businessSettings.business_name}</h2>
-            <p style="font-size: 12px; margin: 5px 0;">${businessSettings.business_address || ''}</p>
-            <p style="font-size: 12px; margin: 5px 0;">Tel: ${businessSettings.business_phone || ''}</p>
-            <p style="font-size: 12px; margin: 10px 0 0;">${new Date(invoice.date).toLocaleString()}</p>
-          </div>
-          <div style="font-size: 12px; margin-bottom: 10px;">
-            <p><strong>FACTURA:</strong> #${invoice.id}</p>
-            <p><strong>CLIENTE:</strong> ${invoice.client_name}</p>
-            <p><strong>TIPO:</strong> ${invoice.type === 'cash' ? 'Contado' : 'Crédito'}</p>
-          </div>
-          <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-bottom: 10px;">
-            <thead>
-              <tr style="border-bottom: 1px dashed black;">
-                <th style="text-align: left; padding: 5px 0;">DESC.</th>
-                <th style="text-align: right; padding: 5px 0;">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${invoice.items?.map(item => `
-                <tr>
-                  <td style="padding: 5px 0;">
-                    ${item.description}<br/>
-                    ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
-                  </td>
-                  <td style="text-align: right; padding: 5px 0;">$${Number(item.subtotal).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div style="font-size: 12px; border-top: 1px dashed black; padding-top: 10px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Subtotal:</span>
-              <span>$${Number(invoice.subtotal).toFixed(2)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Envío:</span>
-              <span>$${Number(invoice.shipping_cost).toFixed(2)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 5px;">
-              <span>TOTAL:</span>
-              <span>$${Number(invoice.total_amount).toFixed(2)}</span>
-            </div>
-          </div>
-          <div style="text-align: center; margin-top: 20px; font-size: 10px;">
-            <p>¡Gracias por su compra!</p>
-          </div>
-        </div>
-      `;
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
       
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; background: white; color: black; margin: 0; padding: 0; }
+            .ticket { width: 80mm; padding: 10px; box-sizing: border-box; }
+            .text-center { text-align: center; }
+            .border-b { border-bottom: 1px dashed #000; }
+            .pb-2 { padding-bottom: 8px; }
+            .mb-2 { margin-bottom: 8px; }
+            .mt-1 { margin-top: 4px; }
+            .font-bold { font-weight: bold; }
+            .uppercase { text-transform: uppercase; }
+            .text-sm { font-size: 12px; }
+            .text-xs { font-size: 10px; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            th { border-bottom: 1px dashed #000; text-align: left; padding: 4px 0; }
+            td { padding: 4px 0; vertical-align: top; }
+            .text-right { text-align: right; }
+            .flex-between { display: flex; justify-content: space-between; }
+            .mt-4 { margin-top: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="ticket" id="pdf-content">
+            <div class="text-center border-b pb-2 mb-2">
+              ${businessSettings.business_logo ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />` : ''}
+              <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name}</h1>
+              ${businessSettings.business_address ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` : ''}
+              ${businessSettings.business_phone ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
+              <p class="text-xs mt-1">${new Date(invoice.date).toLocaleString()}</p>
+            </div>
+            <div class="text-xs mb-2">
+              <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${invoice.id}</p>
+              <p style="margin: 2px 0;"><strong>CLIENTE:</strong> ${invoice.client_name}</p>
+              <p style="margin: 2px 0;"><strong>TIPO:</strong> ${invoice.type === 'cash' ? 'Contado' : 'Crédito'}</p>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>DESCRIPCIÓN</th>
+                  <th class="text-right">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoice.items?.map(item => `
+                  <tr>
+                    <td>
+                      ${item.description}<br/>
+                      ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
+                    </td>
+                    <td class="text-right">$${Number(item.subtotal).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="text-xs border-b pb-2" style="margin-top: 8px;">
+              <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Subtotal:</span>
+                <span>$${Number(invoice.subtotal).toFixed(2)}</span>
+              </div>
+              <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Envío:</span>
+                <span>$${Number(invoice.shipping_cost || 0).toFixed(2)}</span>
+              </div>
+              <div class="flex-between font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
+                <span>TOTAL:</span>
+                <span>$${Number(invoice.total_amount).toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="text-center mt-4 text-xs">
+              <p>¡Gracias por su compra!</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+      doc.close();
+
+      const content = doc.getElementById('pdf-content');
       const opt = {
         margin: 0,
         filename: `Factura_${invoice.id}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
       };
       
-      window.html2pdf().from(element).set(opt).save();
+      // Wait for images to load if any
+      setTimeout(() => {
+        window.html2pdf().from(content).set(opt).save().then(() => {
+          document.body.removeChild(iframe);
+        }).catch(err => {
+          console.error("PDF generation error:", err);
+          document.body.removeChild(iframe);
+          alert("Error al generar PDF: " + err.message);
+        });
+      }, 500);
     };
 
     if (selectedInvoice && selectedInvoice.id == id) {
