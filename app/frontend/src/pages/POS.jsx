@@ -158,6 +158,26 @@ export default function POS() {
     document.body.appendChild(iframe);
     
     const doc = iframe.contentWindow.document;
+    const itemsHtml = lastInvoice.items.map(item => `
+      <tr>
+        <td>
+          ${item.description}<br/>
+          ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
+        </td>
+        <td class="text-right">$${(Number(item.unit_price) * Number(item.quantity)).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const logoHtml = businessSettings.business_logo 
+      ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />` 
+      : '';
+    const addressHtml = businessSettings.business_address 
+      ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` 
+      : '';
+    const phoneHtml = businessSettings.business_phone 
+      ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` 
+      : '';
+
     doc.open();
     doc.write(`
       <!DOCTYPE html>
@@ -187,16 +207,16 @@ export default function POS() {
       <body>
         <div class="ticket" id="pdf-content">
           <div class="text-center border-b pb-2 mb-2">
-            \${businessSettings.business_logo ? \`<img src="\${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />\` : ''}
-            <h1 style="font-size: 16px; margin: 0;" class="uppercase">\${businessSettings.business_name}</h1>
-            \${businessSettings.business_address ? \`<p class="text-xs" style="margin: 2px 0;">\${businessSettings.business_address}</p>\` : ''}
-            \${businessSettings.business_phone ? \`<p class="text-xs" style="margin: 2px 0;">Tel: \${businessSettings.business_phone}</p>\` : ''}
-            <p class="text-xs mt-1">\${lastInvoice.date}</p>
+            ${logoHtml}
+            <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name}</h1>
+            ${addressHtml}
+            ${phoneHtml}
+            <p class="text-xs mt-1">${lastInvoice.date}</p>
           </div>
           <div class="text-xs mb-2">
-            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #\${lastInvoice.id}</p>
-            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> \${lastInvoice.client_name}</p>
-            <p style="margin: 2px 0;"><strong>TIPO:</strong> \${lastInvoice.type}</p>
+            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${lastInvoice.id}</p>
+            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> ${lastInvoice.client_name}</p>
+            <p style="margin: 2px 0;"><strong>TIPO:</strong> ${lastInvoice.type}</p>
           </div>
           <table>
             <thead>
@@ -206,29 +226,21 @@ export default function POS() {
               </tr>
             </thead>
             <tbody>
-              \${lastInvoice.items.map(item => \`
-                <tr>
-                  <td>
-                    \${item.description}<br/>
-                    \${item.quantity} x $\${item.unit_price.toFixed(2)}
-                  </td>
-                  <td class="text-right">$\${(item.unit_price * item.quantity).toFixed(2)}</td>
-                </tr>
-              \`).join('')}
+              ${itemsHtml}
             </tbody>
           </table>
           <div class="text-xs border-b pb-2" style="margin-top: 8px;">
             <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span>Subtotal:</span>
-              <span>$\${\(lastInvoice.total - lastInvoice.shipping\).toFixed(2)}</span>
+              <span>$${(Number(lastInvoice.total) - Number(lastInvoice.shipping)).toFixed(2)}</span>
             </div>
             <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span>Envío:</span>
-              <span>$\${lastInvoice.shipping.toFixed(2)}</span>
+              <span>$${Number(lastInvoice.shipping).toFixed(2)}</span>
             </div>
             <div class="flex-between font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
               <span>TOTAL:</span>
-              <span>$\${lastInvoice.total.toFixed(2)}</span>
+              <span>$${Number(lastInvoice.total).toFixed(2)}</span>
             </div>
           </div>
           <div class="text-center mt-4 text-xs">
@@ -240,7 +252,7 @@ export default function POS() {
             const element = document.getElementById('pdf-content');
             const opt = {
               margin: 0,
-              filename: 'Factura_\${lastInvoice.id}.pdf',
+              filename: 'Factura_${lastInvoice.id}.pdf',
               image: { type: 'jpeg', quality: 0.98 },
               html2canvas: { scale: 3, useCORS: true },
               jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
@@ -254,7 +266,7 @@ export default function POS() {
         </script>
       </body>
       </html>
-    \`);
+    `);
     doc.close();
 
     const handleMessage = (event) => {

@@ -78,6 +78,16 @@ export default function Invoices() {
         </tr>
       `).join('') || '';
 
+      const logoHtml = businessSettings.business_logo 
+        ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />` 
+        : '';
+      const addressHtml = businessSettings.business_address 
+        ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` 
+        : '';
+      const phoneHtml = businessSettings.business_phone 
+        ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` 
+        : '';
+
       doc.open();
       doc.write(`
         <!DOCTYPE html>
@@ -105,10 +115,10 @@ export default function Invoices() {
         <body>
           <div class="ticket" id="pdf-content">
             <div class="text-center border-b pb-2 mb-2">
-              ${businessSettings.business_logo ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />` : ''}
+              ${logoHtml}
               <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name}</h1>
-              ${businessSettings.business_address ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` : ''}
-              ${businessSettings.business_phone ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
+              ${addressHtml}
+              ${phoneHtml}
               <p class="text-xs mt-1">${invoiceDate}</p>
             </div>
             <div class="text-xs mb-2">
