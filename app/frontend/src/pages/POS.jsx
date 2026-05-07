@@ -151,7 +151,10 @@ export default function POS() {
     if (!lastInvoice) return;
     
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-10000px';
+    iframe.style.left = '-10000px';
+    iframe.style.width = '80mm';
     document.body.appendChild(iframe);
     
     const doc = iframe.contentWindow.document;
@@ -160,9 +163,10 @@ export default function POS() {
       <!DOCTYPE html>
       <html>
       <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <style>
           body { font-family: 'Courier New', Courier, monospace; background: white; color: black; margin: 0; padding: 0; }
-          .ticket { width: 80mm; padding: 10px; box-sizing: border-box; }
+          .ticket { width: 80mm; padding: 10px; box-sizing: border-box; background: white; }
           .text-center { text-align: center; }
           .border-b { border-bottom: 1px dashed #000; }
           .pb-2 { padding-bottom: 8px; }
@@ -183,16 +187,16 @@ export default function POS() {
       <body>
         <div class="ticket" id="pdf-content">
           <div class="text-center border-b pb-2 mb-2">
-            ${businessSettings.business_logo ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />` : ''}
-            <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name}</h1>
-            ${businessSettings.business_address ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` : ''}
-            ${businessSettings.business_phone ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
-            <p class="text-xs mt-1">${lastInvoice.date}</p>
+            \${businessSettings.business_logo ? \`<img src="\${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />\` : ''}
+            <h1 style="font-size: 16px; margin: 0;" class="uppercase">\${businessSettings.business_name}</h1>
+            \${businessSettings.business_address ? \`<p class="text-xs" style="margin: 2px 0;">\${businessSettings.business_address}</p>\` : ''}
+            \${businessSettings.business_phone ? \`<p class="text-xs" style="margin: 2px 0;">Tel: \${businessSettings.business_phone}</p>\` : ''}
+            <p class="text-xs mt-1">\${lastInvoice.date}</p>
           </div>
           <div class="text-xs mb-2">
-            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${lastInvoice.id}</p>
-            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> ${lastInvoice.client_name}</p>
-            <p style="margin: 2px 0;"><strong>TIPO:</strong> ${lastInvoice.type}</p>
+            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #\${lastInvoice.id}</p>
+            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> \${lastInvoice.client_name}</p>
+            <p style="margin: 2px 0;"><strong>TIPO:</strong> \${lastInvoice.type}</p>
           </div>
           <table>
             <thead>
@@ -202,65 +206,74 @@ export default function POS() {
               </tr>
             </thead>
             <tbody>
-              ${lastInvoice.items.map(item => `
+              \${lastInvoice.items.map(item => \`
                 <tr>
                   <td>
-                    ${item.description}<br/>
-                    ${item.quantity} x $${item.unit_price.toFixed(2)}
+                    \${item.description}<br/>
+                    \${item.quantity} x $\${item.unit_price.toFixed(2)}
                   </td>
-                  <td class="text-right">$${(item.unit_price * item.quantity).toFixed(2)}</td>
+                  <td class="text-right">$\${(item.unit_price * item.quantity).toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              \`).join('')}
             </tbody>
           </table>
           <div class="text-xs border-b pb-2" style="margin-top: 8px;">
             <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span>Subtotal:</span>
-              <span>$${(lastInvoice.total - lastInvoice.shipping).toFixed(2)}</span>
+              <span>$\${\(lastInvoice.total - lastInvoice.shipping\).toFixed(2)}</span>
             </div>
             <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span>Envío:</span>
-              <span>$${lastInvoice.shipping.toFixed(2)}</span>
+              <span>$\${lastInvoice.shipping.toFixed(2)}</span>
             </div>
             <div class="flex-between font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
               <span>TOTAL:</span>
-              <span>$${lastInvoice.total.toFixed(2)}</span>
+              <span>$\${lastInvoice.total.toFixed(2)}</span>
             </div>
           </div>
           <div class="text-center mt-4 text-xs">
             <p>¡Gracias por su compra!</p>
           </div>
         </div>
+        <script>
+          window.generatePDF = function() {
+            const element = document.getElementById('pdf-content');
+            const opt = {
+              margin: 0,
+              filename: 'Factura_\${lastInvoice.id}.pdf',
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 3, useCORS: true },
+              jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save().then(() => {
+              window.parent.postMessage('pdf-done', '*');
+            }).catch(err => {
+              window.parent.postMessage('pdf-error:' + err.message, '*');
+            });
+          };
+        </script>
       </body>
       </html>
-    `);
+    \`);
     doc.close();
 
-    const content = doc.getElementById('pdf-content');
-    const opt = {
-      margin: 0,
-      filename: `Factura_${lastInvoice.id}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true,
-        onclone: (clonedDoc) => {
-          // Remove all stylesheets to prevent parsing oklch colors from main document
-          Array.from(clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')).forEach(el => el.remove());
-        }
-      },
-      jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+    const handleMessage = (event) => {
+      if (event.data === 'pdf-done') {
+        window.removeEventListener('message', handleMessage);
+        document.body.removeChild(iframe);
+      } else if (typeof event.data === 'string' && event.data.startsWith('pdf-error:')) {
+        window.removeEventListener('message', handleMessage);
+        document.body.removeChild(iframe);
+        alert("Error al generar PDF: " + event.data.replace('pdf-error:', ''));
+      }
     };
-    
+    window.addEventListener('message', handleMessage);
+
     setTimeout(() => {
-      window.html2pdf().from(content).set(opt).save().then(() => {
-        document.body.removeChild(iframe);
-      }).catch(err => {
-        console.error("PDF generation error:", err);
-        document.body.removeChild(iframe);
-        alert("Error al generar PDF: " + err.message);
-      });
-    }, 500);
+      if (iframe.contentWindow && iframe.contentWindow.generatePDF) {
+        iframe.contentWindow.generatePDF();
+      }
+    }, 1000);
   };
 
   const handlePrint = () => {

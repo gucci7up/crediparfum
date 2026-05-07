@@ -67,14 +67,26 @@ export default function Invoices() {
       document.body.appendChild(iframe);
       
       const doc = iframe.contentWindow.document;
+      const invoiceDate = new Date(invoice.date).toLocaleString();
+      const itemsHtml = invoice.items?.map(item => `
+        <tr>
+          <td>
+            ${item.description}<br/>
+            ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
+          </td>
+          <td class="text-right">$${Number(item.subtotal).toFixed(2)}</td>
+        </tr>
+      `).join('') || '';
+
       doc.open();
       doc.write(`
         <!DOCTYPE html>
         <html>
         <head>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
           <style>
-            body { font-family: 'Courier New', Courier, monospace; background: white; color: black; margin: 0; padding: 0; }
-            .ticket { width: 80mm; padding: 10px; box-sizing: border-box; }
+            body { font-family: 'Courier New', Courier, monospace; background: white; color: #000000; margin: 0; padding: 0; }
+            .ticket { width: 80mm; padding: 10px; box-sizing: border-box; background: white; }
             .text-center { text-align: center; }
             .border-b { border-bottom: 1px dashed #000; }
             .pb-2 { padding-bottom: 8px; }
@@ -82,13 +94,11 @@ export default function Invoices() {
             .mt-1 { margin-top: 4px; }
             .font-bold { font-weight: bold; }
             .uppercase { text-transform: uppercase; }
-            .text-sm { font-size: 12px; }
             .text-xs { font-size: 10px; }
             table { width: 100%; border-collapse: collapse; font-size: 10px; }
             th { border-bottom: 1px dashed #000; text-align: left; padding: 4px 0; }
             td { padding: 4px 0; vertical-align: top; }
             .text-right { text-align: right; }
-            .flex-between { display: flex; justify-content: space-between; }
             .mt-4 { margin-top: 16px; }
           </style>
         </head>
@@ -99,7 +109,7 @@ export default function Invoices() {
               <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name}</h1>
               ${businessSettings.business_address ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` : ''}
               ${businessSettings.business_phone ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
-              <p class="text-xs mt-1">${new Date(invoice.date).toLocaleString()}</p>
+              <p class="text-xs mt-1">${invoiceDate}</p>
             </div>
             <div class="text-xs mb-2">
               <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${invoice.id}</p>
@@ -113,28 +123,18 @@ export default function Invoices() {
                   <th class="text-right">TOTAL</th>
                 </tr>
               </thead>
-              <tbody>
-                ${invoice.items?.map(item => `
-                  <tr>
-                    <td>
-                      ${item.description}<br/>
-                      ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
-                    </td>
-                    <td class="text-right">$${Number(item.subtotal).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
+              <tbody>${itemsHtml}</tbody>
             </table>
             <div class="text-xs border-b pb-2" style="margin-top: 8px;">
-              <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                 <span>Subtotal:</span>
                 <span>$${Number(invoice.subtotal).toFixed(2)}</span>
               </div>
-              <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                 <span>Envío:</span>
                 <span>$${Number(invoice.shipping_cost || 0).toFixed(2)}</span>
               </div>
-              <div class="flex-between font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
+              <div class="font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
                 <span>TOTAL:</span>
                 <span>$${Number(invoice.total_amount).toFixed(2)}</span>
               </div>
@@ -143,37 +143,41 @@ export default function Invoices() {
               <p>¡Gracias por su compra!</p>
             </div>
           </div>
+          <script>
+            window.onload = function() {
+              const element = document.getElementById('pdf-content');
+              const opt = {
+                margin: 0,
+                filename: 'Factura_${invoice.id}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+              };
+              // Give it a small delay for image and script to be ready
+              setTimeout(() => {
+                html2pdf().from(element).set(opt).save().then(() => {
+                  window.parent.postMessage('pdf-done', '*');
+                }).catch(err => {
+                  window.parent.postMessage('pdf-error:' + err.message, '*');
+                });
+              }, 500);
+            };
+          </script>
         </body>
         </html>
       `);
       doc.close();
 
-      const content = doc.getElementById('pdf-content');
-      const opt = {
-        margin: 0,
-        filename: `Factura_${invoice.id}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          onclone: (clonedDoc) => {
-            // Remove all stylesheets to prevent parsing oklch colors from main document
-            Array.from(clonedDoc.querySelectorAll('style, link[rel="stylesheet"]')).forEach(el => el.remove());
+      // Clean up after download
+      window.addEventListener('message', function handler(e) {
+        if (e.data === 'pdf-done' || e.data.startsWith('pdf-error')) {
+          if (e.data.startsWith('pdf-error')) {
+            alert("Error en PDF: " + e.data.split(':')[1]);
           }
-        },
-        jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
-      };
-      
-      // Wait for images to load if any
-      setTimeout(() => {
-        window.html2pdf().from(content).set(opt).save().then(() => {
           document.body.removeChild(iframe);
-        }).catch(err => {
-          console.error("PDF generation error:", err);
-          document.body.removeChild(iframe);
-          alert("Error al generar PDF: " + err.message);
-        });
-      }, 500);
+          window.removeEventListener('message', handler);
+        }
+      });
     };
 
     if (selectedInvoice && selectedInvoice.id == id) {
