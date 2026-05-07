@@ -28,15 +28,6 @@ const stats = [
     icon: Users,
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10'
-  },
-  {
-    name: 'Perfumes en Stock',
-    value: '845',
-    trend: '-12',
-    isPositive: false,
-    icon: Package,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-500/10'
   }
 ];
 
@@ -119,7 +110,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Quick Actions / Top Selling */}
+        {/* Quick Actions */}
         <div className="space-y-8">
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -131,27 +122,6 @@ export default function Dashboard() {
               <button className="w-full py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-slate-50 transition-colors">
                 Nueva Factura
               </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 className="text-base font-bold text-slate-900 mb-4">Top Perfumes</h3>
-            <div className="space-y-4">
-              {[
-                { name: 'Bleu de Chanel', sales: '45 ventas', stock: '12 restantes' },
-                { name: 'Dior Sauvage', sales: '38 ventas', stock: '5 restantes' },
-                { name: 'Creed Aventus', sales: '24 ventas', stock: '2 restantes' }
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{item.name}</p>
-                    <p className="text-xs text-slate-500">{item.sales}</p>
-                  </div>
-                  <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">
-                    {item.stock}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
         </div>

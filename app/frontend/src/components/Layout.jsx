@@ -5,7 +5,6 @@ import { cn } from "../lib/utils";
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart },
-  { name: 'Catálogo', href: '/products', icon: Package },
   { name: 'Clientes', href: '/clients', icon: Users },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ];

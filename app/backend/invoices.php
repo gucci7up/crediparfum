@@ -12,7 +12,7 @@ switch ($method) {
             $invoice = $stmt->fetch();
             if ($invoice) {
                 // Obtener items
-                $stmtItems = $pdo->prepare("SELECT ii.*, p.name as product_name FROM invoice_items ii LEFT JOIN products p ON ii.product_id = p.id WHERE ii.invoice_id = ?");
+                $stmtItems = $pdo->prepare("SELECT * FROM invoice_items WHERE invoice_id = ?");
                 $stmtItems->execute([$invoice['id']]);
                 $invoice['items'] = $stmtItems->fetchAll();
                 echo json_encode($invoice);
@@ -36,38 +36,38 @@ switch ($method) {
                 // 1. Insertar factura
                 $type = $data['type'] ?? 'cash';
                 $status = $type === 'credit' ? 'pending' : 'paid'; // Si es crédito, queda pendiente
+                $shipping_cost = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
                 
-                $stmt = $pdo->prepare("INSERT INTO invoices (client_id, total_amount, type, status) VALUES (?, ?, ?, ?)");
-                // Calcularemos el total sumando los items para evitar inconsistencias
-                $total_amount = 0;
+                $stmt = $pdo->prepare("INSERT INTO invoices (client_id, subtotal, shipping_cost, total_amount, type, status) VALUES (?, ?, ?, ?, ?, ?)");
+                
+                $subtotal = 0;
                 foreach ($data['items'] as $item) {
-                    $total_amount += ($item['quantity'] * $item['unit_price']);
+                    $subtotal += ($item['quantity'] * $item['unit_price']);
                 }
+                $total_amount = $subtotal + $shipping_cost;
 
                 $stmt->execute([
                     $data['client_id'], 
+                    $subtotal,
+                    $shipping_cost,
                     $total_amount,
                     $type,
                     $status
                 ]);
                 $invoice_id = $pdo->lastInsertId();
 
-                // 2. Insertar items y actualizar stock
-                $stmtItem = $pdo->prepare("INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)");
-                $stmtStock = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+                // 2. Insertar items
+                $stmtItem = $pdo->prepare("INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)");
 
                 foreach ($data['items'] as $item) {
-                    $subtotal = $item['quantity'] * $item['unit_price'];
+                    $item_subtotal = $item['quantity'] * $item['unit_price'];
                     $stmtItem->execute([
                         $invoice_id,
-                        $item['product_id'],
+                        $item['description'],
                         $item['quantity'],
                         $item['unit_price'],
-                        $subtotal
+                        $item_subtotal
                     ]);
-                    
-                    // Restar del inventario
-                    $stmtStock->execute([$item['quantity'], $item['product_id']]);
                 }
 
                 $pdo->commit();
