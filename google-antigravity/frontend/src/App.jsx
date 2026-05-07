@@ -23,9 +23,8 @@ function App() {
   const logInteraction = async () => {
     try {
       // Ajustar la URL a donde esté alojado el backend
-      // Para pruebas locales, podría ser http://localhost:8080/api.php
-      // Asumiremos que está en la misma red o puerto configurado
-      const backendUrl = 'http://localhost/api.php'; // Cambiar en prod
+      // Usaremos una ruta relativa para que nginx pueda hacer proxy a la API del backend
+      const backendUrl = '/api.php'; 
       const response = await fetch(backendUrl, {
         method: 'POST',
         headers: {
