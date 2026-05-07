@@ -79,6 +79,9 @@ export default function POS() {
   const parsedShipping = parseFloat(shippingCost) || 0;
   const total = subtotal + parsedShipping;
 
+  const [lastInvoice, setLastInvoice] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const handleCheckout = async () => {
     if (cart.length === 0) return alert("La factura no tiene productos");
     if (!selectedClient) return alert("Selecciona un cliente");
@@ -103,7 +106,19 @@ export default function POS() {
       
       const data = await res.json();
       if (data.invoice_id || data.success) {
-        alert("Factura creada con éxito!");
+        // Save for printing
+        const clientObj = clients.find(c => c.id == selectedClient);
+        setLastInvoice({
+          id: data.invoice_id || "N/A",
+          client_name: clientObj ? clientObj.name : "Cliente General",
+          date: new Date().toLocaleString(),
+          items: [...cart],
+          shipping: parsedShipping,
+          total: total,
+          type: paymentType === 'cash' ? 'Contado' : 'Crédito'
+        });
+        
+        setShowSuccessModal(true);
         setCart([]);
         setSelectedClient("");
         setShippingCost("");
@@ -116,8 +131,102 @@ export default function POS() {
     }
   };
 
+  const handlePrint = () => {
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
   return (
     <div className="h-[calc(100vh-8rem)] flex gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Receipt for Printing (Hidden) */}
+      {lastInvoice && (
+        <div className="print-container text-black font-mono">
+          <div className="text-center border-b border-dashed border-black pb-2 mb-2">
+            <h1 className="text-lg font-bold">CREDIPARFUM</h1>
+            <p className="text-xs">Perfumería Profesional</p>
+            <p className="text-[10px]">{lastInvoice.date}</p>
+          </div>
+          
+          <div className="text-[10px] mb-2">
+            <p><strong>FACTURA:</strong> #{lastInvoice.id}</p>
+            <p><strong>CLIENTE:</strong> {lastInvoice.client_name}</p>
+            <p><strong>TIPO:</strong> {lastInvoice.type}</p>
+          </div>
+          
+          <table className="w-full text-[10px] mb-2">
+            <thead>
+              <tr className="border-b border-dashed border-black">
+                <th className="text-left py-1">DESCRIPCIÓN</th>
+                <th className="text-right py-1">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lastInvoice.items.map((item, idx) => (
+                <tr key={idx}>
+                  <td className="py-1">
+                    {item.description}<br/>
+                    {item.quantity} x ${item.unit_price.toFixed(2)}
+                  </td>
+                  <td className="text-right py-1">
+                    ${(item.unit_price * item.quantity).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          <div className="text-[10px] border-t border-dashed border-black pt-2 space-y-1">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>${(lastInvoice.total - lastInvoice.shipping).toFixed(2)}</span>
+            </div>
+            {lastInvoice.shipping > 0 && (
+              <div className="flex justify-between">
+                <span>Envío:</span>
+                <span>${lastInvoice.shipping.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-xs pt-1">
+              <span>TOTAL:</span>
+              <span>${lastInvoice.total.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div className="text-center mt-6 pt-4 border-t border-dashed border-black">
+            <p className="text-[10px]">¡Gracias por su compra!</p>
+            <p className="text-[9px] mt-1">Garantía de originalidad</p>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-8 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Plus className="w-10 h-10 rotate-45" /> {/* Use as checkmark if rotated or find check */}
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Venta Exitosa!</h2>
+            <p className="text-slate-500 mb-8">La factura ha sido registrada correctamente en el sistema.</p>
+            
+            <div className="grid grid-cols-1 gap-3">
+              <button 
+                onClick={handlePrint}
+                className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+              >
+                Imprimir Ticket (58mm)
+              </button>
+              <button 
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+              >
+                Nueva Venta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Left side: Manual Entry Form */}
       <div className="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-200 bg-slate-50">
