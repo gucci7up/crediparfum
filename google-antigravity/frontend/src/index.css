@@ -1,0 +1,96 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  overflow: hidden; /* Evitar barras de desplazamiento con matter.js */
+  background-color: #fff;
+}
+
+/* Contenedor principal de la UI de Google */
+.google-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.google-logo {
+  font-size: 80px;
+  font-weight: bold;
+  letter-spacing: -3px;
+  margin-bottom: 30px;
+  user-select: none;
+}
+
+.google-logo span:nth-child(1) { color: #4285F4; }
+.google-logo span:nth-child(2) { color: #EA4335; }
+.google-logo span:nth-child(3) { color: #FBBC05; }
+.google-logo span:nth-child(4) { color: #4285F4; }
+.google-logo span:nth-child(5) { color: #34A853; }
+.google-logo span:nth-child(6) { color: #EA4335; }
+
+.search-bar {
+  width: 100%;
+  max-width: 580px;
+  padding: 12px 20px;
+  border: 1px solid #dfe1e5;
+  border-radius: 24px;
+  font-size: 16px;
+  outline: none;
+  box-shadow: none;
+  transition: box-shadow 0.2s;
+  margin-bottom: 30px;
+}
+
+.search-bar:hover, .search-bar:focus {
+  box-shadow: 0 1px 6px rgba(32,33,36,.28);
+  border-color: rgba(223,225,229,0);
+}
+
+.buttons-container {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  background-color: #f8f9fa;
+  border: 1px solid #f8f9fa;
+  border-radius: 4px;
+  color: #3c4043;
+  font-size: 14px;
+  margin: 11px 4px;
+  padding: 0 16px;
+  line-height: 27px;
+  height: 36px;
+  min-width: 54px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn:hover {
+  box-shadow: 0 1px 1px rgba(0,0,0,.1);
+  background-color: #f8f9fa;
+  border: 1px solid #dadce0;
+  color: #202124;
+}
+
+/* Canvas de Matter.js */
+.matter-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
