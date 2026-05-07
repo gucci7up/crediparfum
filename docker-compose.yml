@@ -5,8 +5,6 @@ services:
     build:
       context: ./google-antigravity/frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:80"
     depends_on:
       - backend
 
@@ -19,8 +17,6 @@ services:
       - DB_NAME=google_antigravity
       - DB_USER=root
       - DB_PASS=rootpassword
-    ports:
-      - "8080:80"
     depends_on:
       - db
 
@@ -30,8 +26,6 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
       - MYSQL_DATABASE=google_antigravity
-    ports:
-      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
       # Inicializa la base de datos automáticamente
