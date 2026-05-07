@@ -147,6 +147,73 @@ export default function POS() {
     }
   };
 
+  const handleDownload = () => {
+    if (!lastInvoice) return;
+    const element = document.createElement('div');
+    element.innerHTML = `
+      <div style="padding: 20px; font-family: monospace; width: 300px; color: black; background: white;">
+        <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 10px; margin-bottom: 10px;">
+          ${businessSettings.business_logo ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 10px;" />` : ''}
+          <h2 style="margin: 0; text-transform: uppercase;">${businessSettings.business_name}</h2>
+          <p style="font-size: 12px; margin: 5px 0;">${businessSettings.business_address || ''}</p>
+          <p style="font-size: 12px; margin: 5px 0;">Tel: ${businessSettings.business_phone || ''}</p>
+          <p style="font-size: 12px; margin: 10px 0 0;">${lastInvoice.date}</p>
+        </div>
+        <div style="font-size: 12px; margin-bottom: 10px;">
+          <p><strong>FACTURA:</strong> #${lastInvoice.id}</p>
+          <p><strong>CLIENTE:</strong> ${lastInvoice.client_name}</p>
+          <p><strong>TIPO:</strong> ${lastInvoice.type}</p>
+        </div>
+        <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-bottom: 10px;">
+          <thead>
+            <tr style="border-bottom: 1px dashed black;">
+              <th style="text-align: left; padding: 5px 0;">DESC.</th>
+              <th style="text-align: right; padding: 5px 0;">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lastInvoice.items.map(item => `
+              <tr>
+                <td style="padding: 5px 0;">
+                  ${item.description}<br/>
+                  ${item.quantity} x $${item.unit_price.toFixed(2)}
+                </td>
+                <td style="text-align: right; padding: 5px 0;">$${(item.unit_price * item.quantity).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="font-size: 12px; border-top: 1px dashed black; padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span>Subtotal:</span>
+            <span>$${(lastInvoice.total - lastInvoice.shipping).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span>Envío:</span>
+            <span>$${lastInvoice.shipping.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 5px;">
+            <span>TOTAL:</span>
+            <span>$${lastInvoice.total.toFixed(2)}</span>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px; font-size: 10px;">
+          <p>¡Gracias por su compra!</p>
+        </div>
+      </div>
+    `;
+    
+    const opt = {
+      margin: 0,
+      filename: `Factura_${lastInvoice.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+    };
+    
+    window.html2pdf().from(element).set(opt).save();
+  };
+
   const handlePrint = () => {
     setTimeout(() => {
       window.print();
@@ -235,7 +302,15 @@ export default function POS() {
                 onClick={handlePrint}
                 className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
               >
-                Imprimir Ticket (58mm)
+                <Printer className="w-4 h-4" />
+                Imprimir Ticket
+              </button>
+              <button 
+                onClick={handleDownload}
+                className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Descargar PDF
               </button>
               <button 
                 onClick={() => setShowSuccessModal(false)}

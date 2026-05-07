@@ -60,6 +60,85 @@ export default function Invoices() {
     window.print();
   };
 
+  const downloadInvoicePDF = (id) => {
+    // If we have a selected invoice and it matches the ID, use it. 
+    // Otherwise fetch it first.
+    const runDownload = (invoice) => {
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <div style="padding: 20px; font-family: monospace; width: 300px; color: black; background: white;">
+          <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 10px; margin-bottom: 10px;">
+            ${businessSettings.business_logo ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 10px;" />` : ''}
+            <h2 style="margin: 0; text-transform: uppercase;">${businessSettings.business_name}</h2>
+            <p style="font-size: 12px; margin: 5px 0;">${businessSettings.business_address || ''}</p>
+            <p style="font-size: 12px; margin: 5px 0;">Tel: ${businessSettings.business_phone || ''}</p>
+            <p style="font-size: 12px; margin: 10px 0 0;">${new Date(invoice.date).toLocaleString()}</p>
+          </div>
+          <div style="font-size: 12px; margin-bottom: 10px;">
+            <p><strong>FACTURA:</strong> #${invoice.id}</p>
+            <p><strong>CLIENTE:</strong> ${invoice.client_name}</p>
+            <p><strong>TIPO:</strong> ${invoice.type === 'cash' ? 'Contado' : 'Crédito'}</p>
+          </div>
+          <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-bottom: 10px;">
+            <thead>
+              <tr style="border-bottom: 1px dashed black;">
+                <th style="text-align: left; padding: 5px 0;">DESC.</th>
+                <th style="text-align: right; padding: 5px 0;">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.items?.map(item => `
+                <tr>
+                  <td style="padding: 5px 0;">
+                    ${item.description}<br/>
+                    ${item.quantity} x $${Number(item.unit_price).toFixed(2)}
+                  </td>
+                  <td style="text-align: right; padding: 5px 0;">$${Number(item.subtotal).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="font-size: 12px; border-top: 1px dashed black; padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Subtotal:</span>
+              <span>$${Number(invoice.subtotal).toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Envío:</span>
+              <span>$${Number(invoice.shipping_cost).toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 5px;">
+              <span>TOTAL:</span>
+              <span>$${Number(invoice.total_amount).toFixed(2)}</span>
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 20px; font-size: 10px;">
+            <p>¡Gracias por su compra!</p>
+          </div>
+        </div>
+      `;
+      
+      const opt = {
+        margin: 0,
+        filename: `Factura_${invoice.id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+      };
+      
+      window.html2pdf().from(element).set(opt).save();
+    };
+
+    if (selectedInvoice && selectedInvoice.id == id) {
+      runDownload(selectedInvoice);
+    } else {
+      fetch(`/api/invoices.php?id=${id}`)
+        .then(res => res.json())
+        .then(data => runDownload(data))
+        .catch(err => alert("Error al descargar: " + err.message));
+    }
+  };
+
   const filteredInvoices = invoices.filter(inv => 
     inv.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inv.id.toString().includes(searchTerm)
@@ -154,7 +233,11 @@ export default function Invoices() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors" title="Descargar PDF">
+                        <button 
+                          onClick={() => downloadInvoicePDF(inv.id)}
+                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors" 
+                          title="Descargar PDF"
+                        >
                           <Download className="w-4 h-4" />
                         </button>
                       </div>
