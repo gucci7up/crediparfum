@@ -92,10 +92,16 @@ export default function Layout() {
         {/* Top Header - Desktop/Mobile (Hidden on some views on mobile if needed) */}
         <header className="h-20 lg:h-24 bg-white/80 backdrop-blur-md border-b border-slate-200/50 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40">
           <div className="lg:hidden flex items-center gap-3">
-             <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/20">
+            {businessSettings.business_logo ? (
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white p-1 border border-slate-200">
+                <img src={businessSettings.business_logo} alt="Logo" className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/20">
                 <span className="text-white font-black text-xl">{businessSettings.business_name.charAt(0)}</span>
-             </div>
-             <span className="font-black text-slate-900 text-lg">{businessSettings.business_name}</span>
+              </div>
+            )}
+            <span className="font-black text-slate-900 text-lg truncate max-w-[150px]">{businessSettings.business_name}</span>
           </div>
 
           <div className="hidden lg:flex items-center max-w-lg w-full">
