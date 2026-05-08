@@ -244,7 +244,7 @@ export default function POS() {
                   filename: 'Factura_${lastInvoice.id}.pdf',
                   image: { type: 'jpeg', quality: 1.0 },
                   html2canvas: { 
-                    scale: 3, 
+                    scale: 2, 
                     useCORS: true, 
                     logging: true,
                     backgroundColor: '#ffffff',
