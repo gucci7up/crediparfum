@@ -12,12 +12,14 @@ export default function POS() {
   const [itemPrice, setItemPrice] = useState("");
   const [itemQuantity, setItemQuantity] = useState(1);
   const [shippingCost, setShippingCost] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
   const [businessSettings, setBusinessSettings] = useState({
     business_name: "CREDIPARFUM",
     business_logo: null,
     business_address: "",
-    business_phone: ""
+    business_phone: "",
+    credit_term_days: 30
   });
 
   useEffect(() => {
@@ -76,7 +78,8 @@ export default function POS() {
         items: cart,
         shipping_cost: parsedShipping,
         subtotal: subtotal,
-        total_amount: total
+        total_amount: total,
+        due_date: paymentType === 'credit' ? dueDate : null
       };
 
       const res = await fetch("/api/invoices.php", {
@@ -102,6 +105,7 @@ export default function POS() {
         setCart([]);
         setSelectedClient("");
         setShippingCost("");
+        setDueDate("");
       } else {
         alert("Error al crear factura: " + (data.error || "Desconocido"));
       }
@@ -532,11 +536,19 @@ export default function POS() {
                 <span className="text-xs font-black uppercase tracking-widest">Contado</span>
               </button>
               <button 
-                onClick={() => setPaymentType('credit')}
+                onClick={() => {
+                  setPaymentType('credit');
+                  if (!dueDate) {
+                    const days = parseInt(businessSettings.credit_term_days) || 30;
+                    const date = new Date();
+                    date.setDate(date.getDate() + days);
+                    setDueDate(date.toISOString().split('T')[0]);
+                  }
+                }}
                 className={cn(
                   "flex flex-col items-center justify-center gap-3 p-5 rounded-[2rem] border-4 transition-all",
                   paymentType === 'credit' 
-                    ? "border-blue-500 bg-blue-50 text-blue-700 shadow-lg shadow-blue-500/10" 
+                    ? "border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/10" 
                     : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
                 )}
               >
@@ -544,6 +556,22 @@ export default function POS() {
                 <span className="text-xs font-black uppercase tracking-widest">Crédito</span>
               </button>
             </div>
+
+            {paymentType === 'credit' && (
+              <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Fecha de Vencimiento</label>
+                <div className="relative group">
+                  <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-600 transition-colors" />
+                  <input 
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full p-4 pl-12 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-bold text-slate-900"
+                    required={paymentType === 'credit'}
+                  />
+                </div>
+              </div>
+            )}
 
             <button 
               onClick={handleCheckout}

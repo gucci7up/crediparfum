@@ -96,7 +96,7 @@ export default function Clients() {
           <h3 className="text-2xl font-black text-slate-900 mt-1">{clients.length}</h3>
         </div>
         <div className="bg-white p-6 rounded-4xl card-shadow border border-slate-100">
-          <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-4">
+          <div className="w-10 h-10 bg-slate-950 text-white rounded-2xl flex items-center justify-center mb-4">
             <DollarSign className="w-5 h-5" />
           </div>
           <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Con Deuda</p>
@@ -201,7 +201,7 @@ export default function Clients() {
                       <td className="px-8 py-6 text-center">
                         <span className={cn(
                           "inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                          hasDebt ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"
+                          hasDebt ? "bg-primary-50 text-primary-600" : "bg-slate-100 text-slate-900"
                         )}>
                           {hasDebt ? "Con Deuda" : "Al Día"}
                         </span>

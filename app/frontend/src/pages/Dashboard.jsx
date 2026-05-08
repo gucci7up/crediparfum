@@ -20,7 +20,8 @@ export default function Dashboard() {
       { id: 'accounts_receivable', name: 'Cuentas por Cobrar', value: '$0.00', trend: '0%', isPositive: true, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' },
       { id: 'active_clients', name: 'Clientes Activos', value: '0', trend: '0%', isPositive: true, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' }
     ],
-    recentActivity: []
+    recentActivity: [],
+    notifications: []
   });
 
   useEffect(() => {
@@ -28,15 +29,16 @@ export default function Dashboard() {
       .then(res => res.json())
       .then(resData => {
         if (resData.stats) {
-          const statsWithIcons = resData.stats.map(s => {
-            if (s.id === 'monthly_income') return { ...s, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-100' };
-            if (s.id === 'accounts_receivable') return { ...s, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' };
-            if (s.id === 'active_clients') return { ...s, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' };
-            return s;
-          });
+      const statsWithIcons = resData.stats.map(s => {
+        if (s.id === 'monthly_income') return { ...s, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-50' };
+        if (s.id === 'accounts_receivable') return { ...s, icon: Clock, color: 'text-slate-900', bgColor: 'bg-slate-100' };
+        if (s.id === 'active_clients') return { ...s, icon: Users, color: 'text-slate-600', bgColor: 'bg-slate-100' };
+        return s;
+      });
           setData({
             stats: statsWithIcons,
-            recentActivity: Array.isArray(resData.recentActivity) ? resData.recentActivity : []
+            recentActivity: Array.isArray(resData.recentActivity) ? resData.recentActivity : [],
+            notifications: Array.isArray(resData.notifications) ? resData.notifications : []
           });
         }
       })
@@ -90,7 +92,7 @@ export default function Dashboard() {
                 </div>
                 <div className={cn(
                   "flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full",
-                  stat.isPositive ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"
+                  stat.isPositive ? "text-slate-900 bg-slate-100" : "text-primary-600 bg-primary-50"
                 )}>
                   {stat.trend}
                 </div>
@@ -117,7 +119,52 @@ export default function Dashboard() {
         </div>
       </div>
 
+      </div>
+
+      {/* Notifications and Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Notifications / Alerts */}
+        {data.notifications && data.notifications.length > 0 && (
+          <div className="lg:col-span-3 bg-white rounded-[2.5rem] border border-rose-100 p-8 card-shadow bg-gradient-to-br from-white to-rose-50/30">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Alertas de Cobro</h2>
+                <p className="text-sm font-bold text-slate-400">Facturas próximas a vencer o vencidas</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {data.notifications.map((notif, idx) => (
+                <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-rose-200 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-inner",
+                      notif.alert_type === 'Vencida' ? 'bg-primary-600' : 'bg-slate-900'
+                    )}>
+                      {notif.client_name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-slate-900">{notif.client_name}</p>
+                      <p className="text-[11px] font-bold text-slate-400">Vence: {new Date(notif.due_date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-900">${parseFloat(notif.total_amount).toFixed(2)}</p>
+                    <span className={cn(
+                      "text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full inline-block mt-1",
+                      notif.alert_type === 'Vencida' ? 'bg-primary-50 text-primary-600' : 'bg-slate-100 text-slate-900'
+                    )}>
+                      {notif.alert_type}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Spending Overview Chart */}
         <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-200/50 p-8 card-shadow">
           <div className="flex items-center justify-between mb-8">
@@ -164,8 +211,6 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Latest Activity */}
         <div className="bg-white rounded-[2.5rem] border border-slate-200/50 card-shadow flex flex-col">
           <div className="p-8 pb-4 flex items-center justify-between">
             <h2 className="text-xl font-black text-slate-900">Actividad</h2>
@@ -197,9 +242,9 @@ export default function Dashboard() {
                     <p className="text-sm font-black text-slate-900">${parseFloat(tx.amount).toFixed(2)}</p>
                     <span className={cn(
                       "text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full mt-1 inline-block",
-                      tx.status === 'paid' || tx.status === 'Pagado' ? "text-emerald-600 bg-emerald-50" :
-                      tx.status === 'Abono' ? "text-blue-600 bg-blue-50" :
-                      "text-amber-600 bg-amber-50"
+                      tx.status === 'paid' || tx.status === 'Pagado' ? "text-slate-900 bg-slate-100" :
+                      tx.status === 'Abono' ? "text-primary-600 bg-primary-50" :
+                      "text-slate-500 bg-slate-50"
                     )}>
                       {tx.status}
                     </span>

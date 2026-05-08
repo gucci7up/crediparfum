@@ -281,7 +281,7 @@ export default function Invoices() {
           </div>
         </div>
         <div className="bg-white p-6 rounded-[2.5rem] card-shadow border border-slate-100 flex items-center gap-6">
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center shadow-inner">
+          <div className="w-14 h-14 bg-slate-50 text-slate-900 rounded-3xl flex items-center justify-center shadow-inner">
             <ShieldCheck className="w-7 h-7" />
           </div>
           <div>
@@ -290,7 +290,7 @@ export default function Invoices() {
           </div>
         </div>
         <div className="bg-white p-6 rounded-[2.5rem] card-shadow border border-slate-100 flex items-center gap-6">
-          <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center shadow-inner">
+          <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-3xl flex items-center justify-center shadow-inner">
             <Clock className="w-7 h-7" />
           </div>
           <div>
@@ -370,7 +370,7 @@ export default function Invoices() {
                       <div className="flex flex-col">
                         <span className="font-black text-slate-900">{inv.client_name || 'Consumidor Final'}</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1 mt-1">
-                          {inv.type === 'cash' ? <Banknote className="w-3 h-3 text-emerald-500" /> : <CreditCard className="w-3 h-3 text-blue-500" />}
+                          {inv.type === 'cash' ? <Banknote className="w-3 h-3 text-slate-900" /> : <CreditCard className="w-3 h-3 text-primary-600" />}
                           {inv.type === 'cash' ? 'Contado' : 'Crédito'}
                         </span>
                       </div>
@@ -381,7 +381,7 @@ export default function Invoices() {
                     <td className="px-8 py-6 text-center">
                       <span className={cn(
                         "inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                        inv.status === 'paid' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                        inv.status === 'paid' ? "bg-slate-100 text-slate-900" : "bg-primary-50 text-primary-600"
                       )}>
                         {inv.status === 'paid' ? 'Pagada' : 'Pendiente'}
                       </span>
@@ -397,7 +397,7 @@ export default function Invoices() {
                         </button>
                         <button 
                           onClick={() => downloadInvoicePDF(inv.id)}
-                          className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-2xl transition-all" 
+                          className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all" 
                           title="Descargar PDF"
                         >
                           <Download className="w-5 h-5" />

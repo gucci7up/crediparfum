@@ -37,7 +37,9 @@ switch ($method) {
                         business_logo = ?, 
                         business_address = ?, 
                         business_phone = ?, 
-                        currency = ? 
+                        currency = ?,
+                        credit_term_days = ?,
+                        alert_threshold_days = ?
                         WHERE id = 1";
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([
@@ -45,17 +47,21 @@ switch ($method) {
                         $data['business_logo'] ?? null,
                         $data['business_address'] ?? null,
                         $data['business_phone'] ?? null,
-                        $data['currency'] ?? '$'
+                        $data['currency'] ?? '$',
+                        $data['credit_term_days'] ?? 30,
+                        $data['alert_threshold_days'] ?? 3
                     ]);
                 } else {
-                    $sql = "INSERT INTO settings (id, business_name, business_logo, business_address, business_phone, currency) VALUES (1, ?, ?, ?, ?, ?)";
+                    $sql = "INSERT INTO settings (id, business_name, business_logo, business_address, business_phone, currency, credit_term_days, alert_threshold_days) VALUES (1, ?, ?, ?, ?, ?, ?, ?)";
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([
                         $data['business_name'] ?? 'CrediParfum',
                         $data['business_logo'] ?? null,
                         $data['business_address'] ?? null,
                         $data['business_phone'] ?? null,
-                        $data['currency'] ?? '$'
+                        $data['currency'] ?? '$',
+                        $data['credit_term_days'] ?? 30,
+                        $data['alert_threshold_days'] ?? 3
                     ]);
                 }
                 echo json_encode(["success" => true, "message" => "Configuración guardada"]);

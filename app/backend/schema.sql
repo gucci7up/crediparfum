@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     total_amount DECIMAL(10,2) NOT NULL,
     type ENUM('cash', 'credit') DEFAULT 'cash',
     status ENUM('paid', 'pending') DEFAULT 'paid',
+    due_date DATETIME NULL,
     FOREIGN KEY (client_id) REFERENCES clients(id)
 );
 
@@ -48,7 +49,9 @@ CREATE TABLE IF NOT EXISTS settings (
     business_logo LONGTEXT,
     business_address TEXT,
     business_phone VARCHAR(50),
-    currency VARCHAR(10) DEFAULT '$'
+    currency VARCHAR(10) DEFAULT '$',
+    credit_term_days INT DEFAULT 30,
+    alert_threshold_days INT DEFAULT 3
 );
 
 INSERT IGNORE INTO settings (id, business_name) VALUES (1, 'CrediParfum');

@@ -40,8 +40,14 @@ try {
             business_logo LONGTEXT,
             business_address TEXT,
             business_phone VARCHAR(50),
-            currency VARCHAR(10) DEFAULT '$'
+            currency VARCHAR(10) DEFAULT '$',
+            credit_term_days INT DEFAULT 30,
+            alert_threshold_days INT DEFAULT 3
         )");
+        
+        // Ensure columns exist for incremental updates
+        try { $pdo->exec("ALTER TABLE settings ADD COLUMN credit_term_days INT DEFAULT 30"); } catch (Exception $e) {}
+        try { $pdo->exec("ALTER TABLE settings ADD COLUMN alert_threshold_days INT DEFAULT 3"); } catch (Exception $e) {}
         
         // Insertar registro inicial si no existe
         $pdo->exec("INSERT IGNORE INTO settings (id, business_name) VALUES (1, 'CrediParfum')");

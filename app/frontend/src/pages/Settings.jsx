@@ -12,6 +12,8 @@ export default function Settings() {
     business_address: "",
     business_phone: "",
     currency: "$",
+    credit_term_days: 30,
+    alert_threshold_days: 3,
   });
 
   useEffect(() => {
@@ -152,6 +154,34 @@ export default function Settings() {
                       onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
                       className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
                       placeholder="Ej: RD$, $, €"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Días de Crédito (Default)</label>
+                  <div className="relative group">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <input
+                      type="number"
+                      value={settings.credit_term_days}
+                      onChange={(e) => setSettings({ ...settings, credit_term_days: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
+                      placeholder="Ej: 30"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Umbral de Alerta (Días)</label>
+                  <div className="relative group">
+                    <AlertCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <input
+                      type="number"
+                      value={settings.alert_threshold_days}
+                      onChange={(e) => setSettings({ ...settings, alert_threshold_days: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
+                      placeholder="Ej: 3"
                     />
                   </div>
                 </div>

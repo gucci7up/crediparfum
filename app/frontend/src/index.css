@@ -19,7 +19,7 @@
 
 @layer base {
   body {
-    @apply bg-[#F6F7FB] text-slate-900 antialiased;
+    @apply bg-white text-slate-900 antialiased;
     font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   }
 }

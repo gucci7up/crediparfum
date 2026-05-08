@@ -18,6 +18,7 @@ export default function Layout() {
     business_name: "CrediParfum",
     business_logo: null
   });
+  const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
     fetch("/api/settings.php")
@@ -28,20 +29,30 @@ export default function Layout() {
         }
       })
       .catch(err => console.error("Error loading layout settings:", err));
+
+    // Fetch notifications for the bell icon
+    fetch("/api/dashboard_stats.php")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.notifications) {
+          setNotifCount(data.notifications.length);
+        }
+      })
+      .catch(err => console.error("Error fetching notification count:", err));
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F6F7FB] flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row">
       {/* Sidebar - Desktop Only */}
       <aside className="hidden lg:flex w-72 bg-slate-950 text-slate-300 flex-col fixed inset-y-0 z-50 shadow-2xl">
         <div className="h-24 flex items-center px-8 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
             {businessSettings.business_logo ? (
-              <div className="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center bg-white p-1.5 shadow-inner">
+              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
                 <img src={businessSettings.business_logo} alt="Logo" className="w-full h-full object-contain" />
               </div>
             ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/30">
                 <span className="text-white font-black text-2xl">{businessSettings.business_name.charAt(0)}</span>
               </div>
             )}
@@ -116,9 +127,16 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-6">
-            <button className="relative p-2.5 text-slate-400 hover:text-primary-600 transition-all rounded-2xl hover:bg-primary-50">
+            <button 
+              onClick={() => navigate('/')}
+              className="relative p-2.5 text-slate-400 hover:text-primary-600 transition-all rounded-2xl hover:bg-primary-50"
+            >
               <Bell className="w-6 h-6" />
-              <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm"></span>
+              {notifCount > 0 && (
+                <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-rose-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-[10px] text-white font-black">
+                  {notifCount}
+                </span>
+              )}
             </button>
             <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl bg-white p-0.5 border border-slate-200 shadow-sm cursor-pointer hover:border-primary-500 transition-colors">
               <img src="https://ui-avatars.com/api/?name=Admin&background=dc2626&color=fff&bold=true" alt="User" className="w-full h-full object-cover rounded-[14px]" />
@@ -139,7 +157,7 @@ export default function Layout() {
           const Icon = item.icon;
           return (
             <Link key={item.name} to={item.href} className="relative p-3 flex flex-col items-center">
-              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-500 scale-110" : "text-slate-500")} />
+              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-500 scale-110" : "text-white/40")} />
               {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
             </Link>
           );
@@ -158,7 +176,7 @@ export default function Layout() {
           const Icon = item.icon;
           return (
             <Link key={item.name} to={item.href} className="relative p-3 flex flex-col items-center">
-              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-500 scale-110" : "text-slate-500")} />
+              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-500 scale-110" : "text-white/40")} />
               {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
             </Link>
           );

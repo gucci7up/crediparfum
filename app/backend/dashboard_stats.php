@@ -52,6 +52,27 @@ if ($method === 'GET') {
             LIMIT 5
         ");
         $recentActivity = $stmtRecent->fetchAll();
+        
+        // 5. Notificaciones (Facturas vencidas o próximas a vencer)
+        $stmtSet = $pdo->query("SELECT alert_threshold_days FROM settings WHERE id = 1");
+        $settings = $stmtSet->fetch();
+        $threshold = $settings ? $settings['alert_threshold_days'] : 3;
+
+        $stmtNotifs = $pdo->prepare("
+            SELECT i.id, c.name as client, i.total_amount, i.due_date,
+            CASE 
+                WHEN i.due_date < NOW() THEN 'Vencida'
+                ELSE 'Próxima a vencer'
+            END as alert_type
+            FROM invoices i 
+            JOIN clients c ON i.client_id = c.id
+            WHERE i.status = 'pending' 
+            AND (i.due_date <= DATE_ADD(NOW(), INTERVAL ? DAY))
+            ORDER BY i.due_date ASC
+            LIMIT 10
+        ");
+        $stmtNotifs->execute([$threshold]);
+        $notifications = $stmtNotifs->fetchAll();
 
         echo json_encode([
             "stats" => [
@@ -77,7 +98,8 @@ if ($method === 'GET') {
                     "id" => "active_clients"
                 ]
             ],
-            "recentActivity" => $recentActivity
+            "recentActivity" => $recentActivity,
+            "notifications" => $notifications
         ]);
 
     } catch (Exception $e) {

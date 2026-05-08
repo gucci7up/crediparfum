@@ -37,8 +37,9 @@ switch ($method) {
                 $type = $data['type'] ?? 'cash';
                 $status = $type === 'credit' ? 'pending' : 'paid'; // Si es crédito, queda pendiente
                 $shipping_cost = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
+                $due_date = isset($data['due_date']) ? $data['due_date'] : null;
                 
-                $stmt = $pdo->prepare("INSERT INTO invoices (client_id, subtotal, shipping_cost, total_amount, type, status) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO invoices (client_id, subtotal, shipping_cost, total_amount, type, status, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 
                 $subtotal = 0;
                 foreach ($data['items'] as $item) {
@@ -52,7 +53,8 @@ switch ($method) {
                     $shipping_cost,
                     $total_amount,
                     $type,
-                    $status
+                    $status,
+                    $due_date
                 ]);
                 $invoice_id = $pdo->lastInsertId();
 
