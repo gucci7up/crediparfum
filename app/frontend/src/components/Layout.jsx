@@ -134,13 +134,13 @@ export default function Layout() {
 
       {/* Bottom Navigation - Mobile Only */}
       <nav className="lg:hidden fixed bottom-6 left-6 right-6 h-20 bg-slate-900 rounded-[2.5rem] shadow-2xl flex items-center justify-around px-4 z-[100] border border-white/10 no-print">
-        {navigation.slice(0, 2).map((item) => {
+        {navigation.filter((_, i) => i === 0 || i === 2).map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
           return (
             <Link key={item.name} to={item.href} className="relative p-3 flex flex-col items-center">
-              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-400 scale-110" : "text-slate-500")} />
-              {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-400 rounded-full shadow-[0_0_8px_rgba(167,139,250,0.8)]" />}
+              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-500 scale-110" : "text-slate-500")} />
+              {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
             </Link>
           );
         })}
@@ -153,13 +153,13 @@ export default function Layout() {
           <Plus className="w-8 h-8 stroke-[3]" />
         </button>
 
-        {navigation.slice(2, 5).map((item) => {
+        {navigation.filter((_, i) => i === 3 || i === 4).map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
           return (
             <Link key={item.name} to={item.href} className="relative p-3 flex flex-col items-center">
-              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-400 scale-110" : "text-slate-500")} />
-              {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-400 rounded-full shadow-[0_0_8px_rgba(248,113,113,0.8)]" />}
+              <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-500 scale-110" : "text-slate-500")} />
+              {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />}
             </Link>
           );
         })}
