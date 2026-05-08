@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Plus, Trash2, CreditCard, Banknote, ShoppingCart, Truck, FileText, Printer, Download, ChevronRight, Search } from "lucide-react";
+import { User, Plus, Trash2, CreditCard, Banknote, ShoppingCart, Truck, FileText, Printer, Download, ChevronRight, Search, ClipboardList } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function POS() {
@@ -98,7 +98,7 @@ export default function POS() {
           items: [...cart],
           shipping: parsedShipping,
           total: total,
-          type: paymentType === 'cash' ? 'Contado' : 'Crédito'
+          type: paymentType === 'cash' ? 'Contado' : paymentType === 'quote' ? 'Cotización' : 'Crédito'
         });
         
         setShowSuccessModal(true);
@@ -353,8 +353,12 @@ export default function POS() {
             <div className="w-24 h-24 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
                <Plus className="w-12 h-12 rotate-45 stroke-[3]" />
             </div>
-            <h2 className="text-3xl font-black text-slate-900 mb-2">¡Completado!</h2>
-            <p className="text-slate-500 font-bold mb-10">Venta registrada con éxito.</p>
+            <h2 className="text-3xl font-black text-slate-900 mb-2">
+              {lastInvoice?.type === 'Cotización' ? '¡Cotización Guardada!' : '¡Completado!'}
+            </h2>
+            <p className="text-slate-500 font-bold mb-10">
+              {lastInvoice?.type === 'Cotización' ? 'Cotización registrada. Puedes imprimirla o descargarla.' : 'Venta registrada con éxito.'}
+            </p>
             
             <div className="space-y-3">
               <button onClick={() => { window.print(); }} className="w-full py-4 bg-slate-900 text-white rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-900/20">
@@ -522,18 +526,18 @@ export default function POS() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               <button 
                 onClick={() => setPaymentType('cash')}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-3 p-5 rounded-[2rem] border-4 transition-all",
+                  "flex flex-col items-center justify-center gap-2 p-4 rounded-[2rem] border-4 transition-all",
                   paymentType === 'cash' 
                     ? "border-primary-600 bg-primary-50 text-primary-700 shadow-lg shadow-primary-600/10" 
                     : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
                 )}
               >
-                <Banknote className="w-8 h-8" />
-                <span className="text-xs font-black uppercase tracking-widest">Contado</span>
+                <Banknote className="w-7 h-7" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Contado</span>
               </button>
               <button 
                 onClick={() => {
@@ -546,14 +550,26 @@ export default function POS() {
                   }
                 }}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-3 p-5 rounded-[2rem] border-4 transition-all",
+                  "flex flex-col items-center justify-center gap-2 p-4 rounded-[2rem] border-4 transition-all",
                   paymentType === 'credit' 
                     ? "border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/10" 
                     : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
                 )}
               >
-                <CreditCard className="w-8 h-8" />
-                <span className="text-xs font-black uppercase tracking-widest">Crédito</span>
+                <CreditCard className="w-7 h-7" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Crédito</span>
+              </button>
+              <button 
+                onClick={() => setPaymentType('quote')}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-2 p-4 rounded-[2rem] border-4 transition-all",
+                  paymentType === 'quote' 
+                    ? "border-amber-500 bg-amber-50 text-amber-700 shadow-lg shadow-amber-500/10" 
+                    : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
+                )}
+              >
+                <ClipboardList className="w-7 h-7" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Cotización</span>
               </button>
             </div>
 
@@ -576,9 +592,16 @@ export default function POS() {
             <button 
               onClick={handleCheckout}
               disabled={cart.length === 0 || !selectedClient}
-              className="w-full py-5 bg-slate-900 hover:bg-slate-950 text-white rounded-3xl font-black text-xl transition-all disabled:opacity-50 disabled:grayscale shadow-2xl shadow-slate-900/30 active:scale-95 flex items-center justify-center gap-3"
+              className={cn(
+                "w-full py-5 text-white rounded-3xl font-black text-xl transition-all disabled:opacity-50 disabled:grayscale shadow-2xl active:scale-95 flex items-center justify-center gap-3",
+                paymentType === 'quote'
+                  ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30"
+                  : "bg-slate-900 hover:bg-slate-950 shadow-slate-900/30"
+              )}
             >
-              Completar Venta <ChevronRight className="w-6 h-6 stroke-[3]" />
+              {paymentType === 'quote' ? <ClipboardList className="w-6 h-6 stroke-[2.5]" /> : null}
+              {paymentType === 'quote' ? 'Guardar Cotización' : 'Completar Venta'}
+              {paymentType !== 'quote' && <ChevronRight className="w-6 h-6 stroke-[3]" />}
             </button>
           </div>
         </div>

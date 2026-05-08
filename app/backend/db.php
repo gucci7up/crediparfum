@@ -48,6 +48,9 @@ try {
         // Ensure columns exist for incremental updates
         try { $pdo->exec("ALTER TABLE settings ADD COLUMN credit_term_days INT DEFAULT 30"); } catch (Exception $e) {}
         try { $pdo->exec("ALTER TABLE settings ADD COLUMN alert_threshold_days INT DEFAULT 3"); } catch (Exception $e) {}
+        // Migrate invoice type/status ENUMs to support quotes
+        try { $pdo->exec("ALTER TABLE invoices MODIFY COLUMN type ENUM('cash','credit','quote') DEFAULT 'cash'"); } catch (Exception $e) {}
+        try { $pdo->exec("ALTER TABLE invoices MODIFY COLUMN status ENUM('paid','pending','draft') DEFAULT 'paid'"); } catch (Exception $e) {}
         
         // Insertar registro inicial si no existe
         $pdo->exec("INSERT IGNORE INTO settings (id, business_name) VALUES (1, 'CrediParfum')");

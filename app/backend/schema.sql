@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS invoices (
     subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     shipping_cost DECIMAL(10,2) DEFAULT 0.00,
     total_amount DECIMAL(10,2) NOT NULL,
-    type ENUM('cash', 'credit') DEFAULT 'cash',
-    status ENUM('paid', 'pending') DEFAULT 'paid',
+    type ENUM('cash', 'credit', 'quote') DEFAULT 'cash',
+    status ENUM('paid', 'pending', 'draft') DEFAULT 'paid',
     due_date DATETIME NULL,
     FOREIGN KEY (client_id) REFERENCES clients(id)
 );

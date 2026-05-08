@@ -35,7 +35,10 @@ switch ($method) {
 
                 // 1. Insertar factura
                 $type = $data['type'] ?? 'cash';
-                $status = $type === 'credit' ? 'pending' : 'paid'; // Si es crédito, queda pendiente
+                // Status: cash=paid, credit=pending, quote=draft
+                if ($type === 'credit') $status = 'pending';
+                else if ($type === 'quote') $status = 'draft';
+                else $status = 'paid';
                 $shipping_cost = isset($data['shipping_cost']) ? floatval($data['shipping_cost']) : 0;
                 $due_date = isset($data['due_date']) ? $data['due_date'] : null;
                 
@@ -84,6 +87,29 @@ switch ($method) {
         } else {
             http_response_code(400);
             echo json_encode(["error" => "Datos incompletos"]);
+        }
+        break;
+
+    case 'PUT':
+        // Convertir cotización en factura
+        if (isset($_GET['id']) && $_GET['action'] === 'convert') {
+            $id = intval($_GET['id']);
+            try {
+                $stmt = $pdo->prepare("UPDATE invoices SET type = 'cash', status = 'paid' WHERE id = ? AND type = 'quote'");
+                $stmt->execute([$id]);
+                if ($stmt->rowCount() > 0) {
+                    echo json_encode(["success" => true]);
+                } else {
+                    http_response_code(404);
+                    echo json_encode(["error" => "Cotización no encontrada o ya convertida"]);
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(["error" => $e->getMessage()]);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(["error" => "Parámetros inválidos"]);
         }
         break;
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Printer, Download, Eye, FileText, User, Calendar, CreditCard, Banknote, X, ChevronRight, TrendingUp, Clock as ClockIcon, AlertCircle, ShieldCheck } from "lucide-react";
+import { Search, Printer, Download, Eye, FileText, User, Calendar, CreditCard, Banknote, X, ChevronRight, TrendingUp, Clock as ClockIcon, AlertCircle, ShieldCheck, ClipboardList, ArrowRightCircle } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function Invoices() {
@@ -8,6 +8,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'invoices' | 'quotes'
 
   const [businessSettings, setBusinessSettings] = useState({
     business_name: "CREDIPARFUM",
@@ -69,6 +70,21 @@ export default function Invoices() {
         setIsModalOpen(true);
       })
       .catch(err => alert("Error al cargar detalle: " + err.message));
+  };
+
+  const convertQuoteToInvoice = (id) => {
+    if (!window.confirm('\u00bfConvertir esta cotización en factura de contado?')) return;
+    fetch(`/api/invoices.php?id=${id}&action=convert`, { method: 'PUT' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fetchInvoices();
+          alert('Cotización convertida a factura exitosamente.');
+        } else {
+          alert('Error: ' + (data.error || 'No se pudo convertir'));
+        }
+      })
+      .catch(() => alert('Error de conexión al convertir'));
   };
 
   const handlePrint = () => {
@@ -250,14 +266,19 @@ export default function Invoices() {
     }
   };
 
-  const filteredInvoices = invoices.filter(inv => 
-    inv.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inv.id.toString().includes(searchTerm)
-  );
-
-  const totalSales = invoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
+  const totalSales = invoices.filter(inv => inv.type !== 'quote').reduce((sum, inv) => sum + Number(inv.total_amount), 0);
   const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
-  const pendingInvoices = invoices.filter(inv => inv.status !== 'paid').length;
+  const pendingInvoices = invoices.filter(inv => inv.status === 'pending').length;
+  const quoteCount = invoices.filter(inv => inv.type === 'quote').length;
+
+  const filteredInvoices = invoices.filter(inv => {
+    const matchesSearch = inv.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.id.toString().includes(searchTerm);
+    if (!matchesSearch) return false;
+    if (activeTab === 'invoices') return inv.type !== 'quote';
+    if (activeTab === 'quotes') return inv.type === 'quote';
+    return true;
+  });
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -290,20 +311,38 @@ export default function Invoices() {
           </div>
         </div>
         <div className="bg-white p-6 rounded-[2.5rem] card-shadow border border-slate-100 flex items-center gap-6">
-          <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-3xl flex items-center justify-center shadow-inner">
-            <ClockIcon className="w-7 h-7" />
+          <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center shadow-inner">
+            <ClipboardList className="w-7 h-7" />
           </div>
           <div>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Pendientes</p>
-            <h3 className="text-2xl font-black text-slate-900 mt-0.5">{pendingInvoices} Facturas</h3>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Cotizaciones</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-0.5">{quoteCount} Total</h3>
           </div>
         </div>
       </div>
 
       {/* Main Table Area */}
       <div className="bg-white rounded-[3rem] card-shadow border border-slate-200/50 overflow-hidden">
-        <div className="p-8 border-b border-slate-100 bg-slate-50/50">
-          <div className="relative max-w-md group">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          {/* Tabs */}
+          <div className="flex gap-2 bg-slate-100 p-1 rounded-2xl">
+            {[['all','Todas'],['invoices','Facturas'],['quotes','Cotizaciones']].map(([tab, label]) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+                  activeTab === tab
+                    ? tab === 'quotes' ? "bg-amber-500 text-white shadow" : "bg-white text-slate-900 shadow"
+                    : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* Search */}
+          <div className="relative flex-1 max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-600 transition-colors" />
             <input 
               type="text" 
@@ -381,9 +420,11 @@ export default function Invoices() {
                     <td className="px-8 py-6 text-center">
                       <span className={cn(
                         "inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                        inv.status === 'paid' ? "bg-slate-100 text-slate-900" : "bg-primary-50 text-primary-600"
+                        inv.status === 'paid' ? "bg-slate-100 text-slate-900"
+                        : inv.status === 'draft' ? "bg-amber-50 text-amber-600 border border-amber-200"
+                        : "bg-primary-50 text-primary-600"
                       )}>
-                        {inv.status === 'paid' ? 'Pagada' : 'Pendiente'}
+                        {inv.status === 'paid' ? 'Pagada' : inv.status === 'draft' ? 'Cotización' : 'Pendiente'}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
@@ -402,6 +443,15 @@ export default function Invoices() {
                         >
                           <Download className="w-4 h-4" />
                         </button>
+                        {inv.type === 'quote' && (
+                          <button 
+                            onClick={() => convertQuoteToInvoice(inv.id)}
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200 transition-all active:scale-95" 
+                            title="Convertir a Factura"
+                          >
+                            <ArrowRightCircle className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

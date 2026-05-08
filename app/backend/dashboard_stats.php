@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     try {
-        // 1. Ingresos en efectivo este mes
+        // Ingresos en efectivo este mes (excluye cotizaciones)
         $stmtCash = $pdo->query("
             SELECT COALESCE(SUM(total_amount), 0) as cash_income 
             FROM invoices 
@@ -45,8 +45,7 @@ if ($method === 'GET') {
             $isPositive = true;
         }
 
-        // 2. Cuentas por Cobrar
-        // Total de facturas de crédito pendientes
+        // 2. Cuentas por Cobrar (solo facturas de crédito, excluye cotizaciones)
         $totalCredit = (float)$pdo->query("
             SELECT COALESCE(SUM(total_amount), 0) as t 
             FROM invoices 
