@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Upload, Building, Phone, MapPin, DollarSign, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Save, Upload, Building, Phone, MapPin, DollarSign, Clock as ClockIcon, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function Settings() {
@@ -161,7 +161,7 @@ export default function Settings() {
                 <div className="space-y-3">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Días de Crédito (Default)</label>
                   <div className="relative group">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <ClockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
                     <input
                       type="number"
                       value={settings.credit_term_days}

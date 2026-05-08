@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DollarSign, Users, ArrowUpRight, ArrowDownRight, Clock, ShoppingCart, ChevronRight, TrendingUp } from "lucide-react";
+import { DollarSign, Users, ArrowUpRight, ArrowDownRight, Clock as ClockIcon, ShoppingCart, ChevronRight, TrendingUp } from "lucide-react";
 import { cn } from "../lib/utils";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -16,9 +16,9 @@ const chartData = [
 export default function Dashboard() {
   const [data, setData] = useState({
     stats: [
-      { id: 'monthly_income', name: 'Ingresos Mensuales', value: '$0.00', trend: '0%', isPositive: true, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-100' },
-      { id: 'accounts_receivable', name: 'Cuentas por Cobrar', value: '$0.00', trend: '0%', isPositive: true, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' },
-      { id: 'active_clients', name: 'Clientes Activos', value: '0', trend: '0%', isPositive: true, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' }
+      { id: 'monthly_income', name: 'Ingresos Mensuales', value: '$0.00', trend: '0%', isPositive: true, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-50' },
+      { id: 'accounts_receivable', name: 'Cuentas por Cobrar', value: '$0.00', trend: '0%', isPositive: true, icon: ClockIcon, color: 'text-slate-900', bgColor: 'bg-slate-100' },
+      { id: 'active_clients', name: 'Clientes Activos', value: '0', trend: '0%', isPositive: true, icon: Users, color: 'text-slate-600', bgColor: 'bg-slate-100' }
     ],
     recentActivity: [],
     notifications: []
@@ -31,7 +31,7 @@ export default function Dashboard() {
         if (resData.stats) {
       const statsWithIcons = resData.stats.map(s => {
         if (s.id === 'monthly_income') return { ...s, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-50' };
-        if (s.id === 'accounts_receivable') return { ...s, icon: Clock, color: 'text-slate-900', bgColor: 'bg-slate-100' };
+        if (s.id === 'accounts_receivable') return { ...s, icon: ClockIcon, color: 'text-slate-900', bgColor: 'bg-slate-100' };
         if (s.id === 'active_clients') return { ...s, icon: Users, color: 'text-slate-600', bgColor: 'bg-slate-100' };
         return s;
       });
@@ -126,7 +126,7 @@ export default function Dashboard() {
           <div className="lg:col-span-3 bg-white rounded-[2.5rem] border border-rose-100 p-8 card-shadow bg-gradient-to-br from-white to-rose-50/30">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
-                <Clock className="w-5 h-5 text-white" />
+                <ClockIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-black text-slate-900">Alertas de Cobro</h2>

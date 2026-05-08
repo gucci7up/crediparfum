@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Printer, Download, Eye, FileText, User, Calendar, CreditCard, Banknote, X, ChevronRight, TrendingUp, Clock, AlertCircle, ShieldCheck } from "lucide-react";
+import { Search, Printer, Download, Eye, FileText, User, Calendar, CreditCard, Banknote, X, ChevronRight, TrendingUp, Clock as ClockIcon, AlertCircle, ShieldCheck } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function Invoices() {
@@ -291,7 +291,7 @@ export default function Invoices() {
         </div>
         <div className="bg-white p-6 rounded-[2.5rem] card-shadow border border-slate-100 flex items-center gap-6">
           <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-3xl flex items-center justify-center shadow-inner">
-            <Clock className="w-7 h-7" />
+            <ClockIcon className="w-7 h-7" />
           </div>
           <div>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Pendientes</p>
