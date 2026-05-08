@@ -217,7 +217,7 @@ export default function POS() {
 
           <div class="text-center" style="margin-top: 30px; font-size: 11px; border-top: 1px dashed #ccc; pt: 10px;">
             <p style="font-weight: bold; letter-spacing: 2px;">¡Gracias por elegirnos!</p>
-            <p style="font-size: 9px; color: #666; margin-top: 10px;">CrediParfum - Gestión de Ventas</p>
+            <p style="font-size: 9px; color: #666; margin-top: 10px;">${businessSettings.business_name} - Gestión de Ventas</p>
           </div>
         </div>
 
