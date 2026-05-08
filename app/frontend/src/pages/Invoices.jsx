@@ -62,135 +62,163 @@ export default function Invoices() {
 
   const downloadInvoicePDF = (id) => {
     const runDownload = (invoice) => {
-      // Load html2pdf if not present
-      const scriptId = 'html2pdf-script';
-      if (!document.getElementById(scriptId)) {
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = () => executeDownload(invoice);
-        document.head.appendChild(script);
-      } else {
-        executeDownload(invoice);
-      }
-    };
+      // Create a clean iframe to avoid "oklch" error and ensure a renderable environment
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.left = '-10000px';
+      iframe.style.top = '0';
+      iframe.style.width = '80mm';
+      iframe.style.height = '1000px';
+      iframe.style.border = 'none';
+      iframe.style.background = 'white';
+      document.body.appendChild(iframe);
 
-    function executeDownload(invoice) {
-      const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-      container.style.width = '80mm';
-      container.style.background = 'white';
-      container.style.color = 'black';
-      container.style.fontFamily = 'Courier New, Courier, monospace';
-      container.style.padding = '5mm';
-      container.style.zIndex = '-1';
-      document.body.appendChild(container);
-
+      const doc = iframe.contentWindow.document;
       const invoiceDate = invoice.date ? new Date(invoice.date).toLocaleString() : new Date().toLocaleString();
+      
       const itemsHtml = (invoice.items || []).map(item => `
         <tr>
-          <td style="padding: 4px 0; font-size: 10px;">
+          <td style="padding: 4px 0; font-family: sans-serif; font-size: 11px;">
             ${item.description || 'Producto'}<br/>
-            <small>${item.quantity || 1} x $${Number(item.unit_price || 0).toFixed(2)}</small>
+            <small style="color: #666;">${item.quantity || 1} x $${Number(item.unit_price || 0).toFixed(2)}</small>
           </td>
-          <td style="padding: 4px 0; text-align: right; vertical-align: top; font-size: 10px;">
+          <td style="padding: 4px 0; text-align: right; vertical-align: top; font-family: sans-serif; font-size: 11px;">
             $${Number(item.subtotal || 0).toFixed(2)}
           </td>
         </tr>
       `).join('');
 
       const logoHtml = businessSettings.business_logo 
-        ? `<div style="text-align: center; margin-bottom: 8px;"><img src="${businessSettings.business_logo}" style="width: 80px;" /></div>` 
+        ? `<div style="text-align: center; margin-bottom: 10px;"><img src="${businessSettings.business_logo}" style="width: 100px; max-width: 100%;" /></div>` 
         : '';
 
-      container.innerHTML = `
-        <div style="width: 70mm; margin: 0 auto; background: white;">
-          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
-            ${logoHtml}
-            <h1 style="font-size: 16px; margin: 0; text-transform: uppercase;">${businessSettings.business_name || 'CrediParfum'}</h1>
-            ${businessSettings.business_address ? `<p style="font-size: 10px; margin: 2px 0;">${businessSettings.business_address}</p>` : ''}
-            ${businessSettings.business_phone ? `<p style="font-size: 10px; margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
-            <p style="font-size: 10px; margin: 4px 0;">${invoiceDate}</p>
-          </div>
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { 
+              margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: Arial, sans-serif; 
+            }
+            .ticket { width: 70mm; padding: 5mm; margin: 0 auto; background: #ffffff; }
+            table { width: 100%; border-collapse: collapse; }
+            .text-center { text-align: center; }
+            .border-b { border-bottom: 1px dashed #000000; }
+            .uppercase { text-transform: uppercase; }
+            .text-xs { font-size: 11px; }
+            .font-bold { font-weight: bold; }
+          </style>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        </head>
+        <body>
+          <div class="ticket" id="pdf-content">
+            <div class="text-center border-b" style="padding-bottom: 10px; margin-bottom: 10px;">
+              ${logoHtml}
+              <h1 style="font-size: 18px; margin: 0;" class="uppercase">${businessSettings.business_name || 'CrediParfum'}</h1>
+              ${businessSettings.business_address ? `<p class="text-xs" style="margin: 3px 0;">${businessSettings.business_address}</p>` : ''}
+              ${businessSettings.business_phone ? `<p class="text-xs" style="margin: 3px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
+              <p class="text-xs" style="margin: 5px 0;">${invoiceDate}</p>
+            </div>
 
-          <div style="font-size: 10px; margin-bottom: 8px;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 2px 0;"><strong>FACTURA:</strong></td><td style="text-align: right; padding: 2px 0;">#${invoice.id}</td></tr>
-              <tr><td style="padding: 2px 0;"><strong>CLIENTE:</strong></td><td style="text-align: right; padding: 2px 0;">${invoice.client_name || 'General'}</td></tr>
-              <tr><td style="padding: 2px 0;"><strong>TIPO:</strong></td><td style="text-align: right; padding: 2px 0;">${invoice.type === 'cash' ? 'Contado' : 'Crédito'}</td></tr>
+            <div class="text-xs" style="margin-bottom: 10px;">
+              <table>
+                <tr><td style="padding: 2px 0;"><strong>FACTURA:</strong></td><td style="text-align: right;">#${invoice.id}</td></tr>
+                <tr><td style="padding: 2px 0;"><strong>CLIENTE:</strong></td><td style="text-align: right;">${invoice.client_name || 'General'}</td></tr>
+                <tr><td style="padding: 2px 0;"><strong>TIPO:</strong></td><td style="text-align: right;">${invoice.type === 'cash' ? 'Contado' : 'Crédito'}</td></tr>
+              </table>
+            </div>
+
+            <table style="border-top: 1px dashed #000000; border-bottom: 1px dashed #000000; margin-bottom: 10px;">
+              <thead>
+                <tr>
+                  <th style="text-align: left; padding: 5px 0; font-size: 11px;">DESC.</th>
+                  <th style="text-align: right; padding: 5px 0; font-size: 11px;">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>${itemsHtml}</tbody>
             </table>
+
+            <div class="text-xs">
+              <table>
+                <tr>
+                  <td style="padding: 2px 0;">Subtotal:</td>
+                  <td style="text-align: right;">$${Number(invoice.subtotal || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 2px 0;">Envío:</td>
+                  <td style="text-align: right;">$${Number(invoice.shipping_cost || 0).toFixed(2)}</td>
+                </tr>
+                <tr style="font-weight: bold; font-size: 15px;">
+                  <td style="padding-top: 5px;">TOTAL:</td>
+                  <td style="text-align: right; padding-top: 5px;">$${Number(invoice.total_amount || 0).toFixed(2)}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="text-center" style="margin-top: 25px; font-size: 11px;">
+              <p>REIMPRESIÓN</p>
+              <p>¡Gracias por su compra!</p>
+            </div>
           </div>
 
-          <table style="width: 100%; border-collapse: collapse; border-top: 1px dashed #000; border-bottom: 1px dashed #000; margin-bottom: 8px;">
-            <thead>
-              <tr>
-                <th style="text-align: left; padding: 4px 0; font-size: 10px;">DESC.</th>
-                <th style="text-align: right; padding: 4px 0; font-size: 10px;">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>${itemsHtml}</tbody>
-          </table>
+          <script>
+            window.onload = function() {
+              const images = document.getElementsByTagName('img');
+              const promises = Array.from(images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                  img.onload = resolve;
+                  img.onerror = resolve;
+                });
+              });
 
-          <div style="font-size: 10px;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 2px 0;">Subtotal:</td>
-                <td style="text-align: right; padding: 2px 0;">$${Number(invoice.subtotal || 0).toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td style="padding: 2px 0;">Envío:</td>
-                <td style="text-align: right; padding: 2px 0;">$${Number(invoice.shipping_cost || 0).toFixed(2)}</td>
-              </tr>
-              <tr style="font-weight: bold; font-size: 14px;">
-                <td style="padding-top: 4px;">TOTAL:</td>
-                <td style="text-align: right; padding-top: 4px;">$${Number(invoice.total_amount || 0).toFixed(2)}</td>
-              </tr>
-            </table>
-          </div>
+              Promise.all(promises).then(() => {
+                setTimeout(() => {
+                  if (typeof html2pdf === 'undefined') {
+                    window.parent.postMessage('pdf-error:Biblioteca no cargada', '*');
+                    return;
+                  }
+                  const element = document.getElementById('pdf-content');
+                  const opt = {
+                    margin: 0,
+                    filename: 'Factura_${invoice.id}.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                      scale: 2, 
+                      useCORS: true, 
+                      logging: false,
+                      backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { unit: 'mm', format: [80, 250], orientation: 'portrait' }
+                  };
+                  html2pdf().from(element).set(opt).save().then(() => {
+                    window.parent.postMessage('pdf-done', '*');
+                  }).catch(err => {
+                    window.parent.postMessage('pdf-error:' + err.message, '*');
+                  });
+                }, 500);
+              });
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      doc.close();
 
-          <div style="text-align: center; margin-top: 20px; font-size: 10px;">
-            <p>¡Gracias por su compra!</p>
-          </div>
-        </div>
-      `;
-
-      const opt = {
-        margin: 0,
-        filename: `Factura_${invoice.id}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          logging: false,
-          allowTaint: true,
-          backgroundColor: '#ffffff'
-        },
-        jsPDF: { unit: 'mm', format: [80, 250], orientation: 'portrait' }
+      const handleMessage = (event) => {
+        if (event.data === 'pdf-done') {
+          window.removeEventListener('message', handleMessage);
+          if (document.body.contains(iframe)) document.body.removeChild(iframe);
+        } else if (typeof event.data === 'string' && event.data.startsWith('pdf-error:')) {
+          window.removeEventListener('message', handleMessage);
+          if (document.body.contains(iframe)) document.body.removeChild(iframe);
+          alert("Error al generar PDF: " + event.data.replace('pdf-error:', ''));
+        }
       };
-
-      const images = container.getElementsByTagName('img');
-      const imagePromises = Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve;
-        });
-      });
-
-      Promise.all(imagePromises).then(() => {
-        setTimeout(() => {
-          window.html2pdf().from(container).set(opt).save().then(() => {
-            document.body.removeChild(container);
-          }).catch(err => {
-            console.error("PDF Error:", err);
-            document.body.removeChild(container);
-            alert("Error al generar PDF: " + err.message);
-          });
-        }, 500);
-      });
-    }
+      window.addEventListener('message', handleMessage);
+    };
 
     if (selectedInvoice && selectedInvoice.id == id) {
       runDownload(selectedInvoice);
@@ -399,7 +427,6 @@ export default function Invoices() {
             </div>
           </div>
 
-          {/* Versión para Impresión (Misma que POS pero para este modal) */}
           <div className="print-container text-black font-mono">
             <div className="text-center border-b border-dashed border-black pb-2 mb-2">
               {businessSettings.business_logo && (
