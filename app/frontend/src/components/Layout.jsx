@@ -115,7 +115,7 @@ export default function Layout() {
               <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm"></span>
             </button>
             <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl bg-white p-0.5 border border-slate-200 shadow-sm cursor-pointer hover:border-primary-500 transition-colors">
-              <img src="https://ui-avatars.com/api/?name=Admin&background=7c3aed&color=fff&bold=true" alt="User" className="w-full h-full object-cover rounded-[14px]" />
+              <img src="https://ui-avatars.com/api/?name=Admin&background=dc2626&color=fff&bold=true" alt="User" className="w-full h-full object-cover rounded-[14px]" />
             </div>
           </div>
         </header>
@@ -147,13 +147,13 @@ export default function Layout() {
           <Plus className="w-8 h-8 stroke-[3]" />
         </button>
 
-        {navigation.slice(2, 4).map((item) => {
+        {navigation.slice(2, 5).map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
           return (
             <Link key={item.name} to={item.href} className="relative p-3 flex flex-col items-center">
               <Icon className={cn("w-7 h-7 transition-all duration-300", isActive ? "text-primary-400 scale-110" : "text-slate-500")} />
-              {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-400 rounded-full shadow-[0_0_8px_rgba(167,139,250,0.8)]" />}
+              {isActive && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary-400 rounded-full shadow-[0_0_8px_rgba(248,113,113,0.8)]" />}
             </Link>
           );
         })}

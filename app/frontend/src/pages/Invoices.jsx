@@ -178,7 +178,7 @@ export default function Invoices() {
             <div class="text-center" style="margin-top: 30px; font-size: 11px; border-top: 1px dashed #ccc; pt: 10px;">
               <p style="font-weight: bold; letter-spacing: 2px;">REIMPRESIÓN</p>
               <p>¡Gracias por elegirnos!</p>
-              <p style="font-size: 9px; color: #666; margin-top: 10px;">Powered by MotaCreditos</p>
+              <p style="font-size: 9px; color: #666; margin-top: 10px;">CrediParfum - Gestión de Ventas</p>
             </div>
           </div>
 

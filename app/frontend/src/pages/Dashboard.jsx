@@ -70,15 +70,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex -space-x-3">
-             {[1,2,3,4].map(i => (
-               <div key={i} className="w-12 h-12 rounded-2xl border-4 border-primary-600 overflow-hidden bg-slate-200 shadow-xl">
-                 <img src={`https://i.pravatar.cc/150?u=${i+10}`} alt="User" className="w-full h-full object-cover" />
-               </div>
-             ))}
-             <div className="w-12 h-12 rounded-2xl border-4 border-primary-600 bg-primary-500 flex items-center justify-center text-xs font-bold shadow-xl">
-               +12
-             </div>
+          <div className="hidden lg:block">
+            <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/20">
+              <TrendingUp className="w-12 h-12 text-white/50" />
+            </div>
           </div>
         </div>
       </div>
@@ -108,7 +103,7 @@ export default function Dashboard() {
           );
         })}
         {/* Placeholder for "Nature" type card in design */}
-        <div className="flex-shrink-0 w-72 bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20 flex flex-col justify-between transition-all hover:translate-y-[-4px]">
+        <div className="flex-shrink-0 w-72 bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-[2rem] text-white shadow-xl shadow-slate-900/20 flex flex-col justify-between transition-all hover:translate-y-[-4px]">
             <div className="flex justify-between items-start">
                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
                   <ShoppingCart className="w-6 h-6" />
@@ -116,7 +111,7 @@ export default function Dashboard() {
                <ArrowUpRight className="w-6 h-6 opacity-60" />
             </div>
             <div>
-               <p className="text-indigo-100 font-bold text-sm mb-1">Nueva Venta</p>
+               <p className="text-slate-400 font-bold text-sm mb-1">Nueva Venta</p>
                <h3 className="text-xl font-black">Registrar ahora</h3>
             </div>
         </div>
@@ -140,8 +135,8 @@ export default function Dashboard() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -155,12 +150,12 @@ export default function Dashboard() {
                 <YAxis hide />
                 <Tooltip 
                   contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)'}}
-                  itemStyle={{fontWeight: 'bold', color: '#7c3aed'}}
+                  itemStyle={{fontWeight: 'bold', color: '#dc2626'}}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="sales" 
-                  stroke="#7c3aed" 
+                  stroke="#dc2626" 
                   strokeWidth={4} 
                   fillOpacity={1} 
                   fill="url(#colorSales)" 
