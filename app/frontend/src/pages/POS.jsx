@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Plus, Trash2, CreditCard, Banknote, ShoppingCart, Truck, FileText } from "lucide-react";
+import { User, Plus, Trash2, CreditCard, Banknote, ShoppingCart, Truck, FileText, Printer, Download } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function POS() {
@@ -28,13 +28,6 @@ export default function POS() {
         if (data && data.business_name) setBusinessSettings(data);
       })
       .catch(err => console.error("Error loading settings in POS:", err));
-  }, []);
-
-  useEffect(() => {
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
-      alert("Error detectado: " + msg + "\nEn: " + url + "\nLínea: " + lineNo);
-      return false;
-    };
   }, []);
 
   useEffect(() => {
@@ -99,24 +92,21 @@ export default function POS() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return alert("La factura no tiene productos");
-    if (!selectedClient) return alert("Selecciona un cliente");
+    if (cart.length === 0 || !selectedClient) return;
 
     try {
       const invoiceData = {
         client_id: selectedClient,
         type: paymentType,
+        items: cart,
         shipping_cost: parsedShipping,
-        items: cart.map(item => ({
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price
-        }))
+        subtotal: subtotal,
+        total_amount: total
       };
 
-      const res = await fetch('/api/invoices.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/invoices.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
       });
       
@@ -150,143 +140,137 @@ export default function POS() {
   const handleDownload = () => {
     if (!lastInvoice) return;
     
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.top = '-10000px';
-    iframe.style.left = '-10000px';
-    iframe.style.width = '80mm';
-    document.body.appendChild(iframe);
-    
-    const doc = iframe.contentWindow.document;
-    const itemsHtml = (lastInvoice.items || []).map(item => `
-      <tr>
-        <td>
-          ${item.description || 'Producto'}<br/>
-          ${item.quantity || 1} x $${Number(item.unit_price || 0).toFixed(2)}
-        </td>
-        <td class="text-right">$${(Number(item.unit_price || 0) * Number(item.quantity || 1)).toFixed(2)}</td>
-      </tr>
-    `).join('');
+    // Check if html2pdf is available in the main window
+    const scriptId = 'html2pdf-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => executeDownload();
+      document.head.appendChild(script);
+    } else {
+      executeDownload();
+    }
 
-    const logoHtml = businessSettings.business_logo 
-      ? `<img src="${businessSettings.business_logo}" style="width: 80px; display: block; margin: 0 auto 8px;" />` 
-      : '';
-    const addressHtml = businessSettings.business_address 
-      ? `<p class="text-xs" style="margin: 2px 0;">${businessSettings.business_address}</p>` 
-      : '';
-    const phoneHtml = businessSettings.business_phone 
-      ? `<p class="text-xs" style="margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` 
-      : '';
+    function executeDownload() {
+      // Create a temporary visible but off-screen container
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.width = '80mm';
+      container.style.background = 'white';
+      container.style.color = 'black';
+      container.style.fontFamily = 'Courier New, Courier, monospace';
+      container.style.padding = '5mm';
+      container.style.zIndex = '-1';
+      document.body.appendChild(container);
 
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-        <style>
-          body { font-family: 'Courier New', Courier, monospace; background: white; color: black; margin: 0; padding: 0; }
-          .ticket { width: 80mm; padding: 10px; box-sizing: border-box; background: white; }
-          .text-center { text-align: center; }
-          .border-b { border-bottom: 1px dashed #000; }
-          .pb-2 { padding-bottom: 8px; }
-          .mb-2 { margin-bottom: 8px; }
-          .mt-1 { margin-top: 4px; }
-          .font-bold { font-weight: bold; }
-          .uppercase { text-transform: uppercase; }
-          .text-xs { font-size: 10px; }
-          table { width: 100%; border-collapse: collapse; font-size: 10px; }
-          th { border-bottom: 1px dashed #000; text-align: left; padding: 4px 0; }
-          td { padding: 4px 0; vertical-align: top; }
-          .text-right { text-align: right; }
-          .flex-between { display: flex; justify-content: space-between; }
-          .mt-4 { margin-top: 16px; }
-        </style>
-      </head>
-      <body>
-        <div class="ticket" id="pdf-content">
-          <div class="text-center border-b pb-2 mb-2">
+      const itemsHtml = (lastInvoice.items || []).map(item => `
+        <tr>
+          <td style="padding: 4px 0; font-size: 10px;">
+            ${item.description || 'Producto'}<br/>
+            <small>${item.quantity || 1} x $${Number(item.unit_price || 0).toFixed(2)}</small>
+          </td>
+          <td style="padding: 4px 0; text-align: right; vertical-align: top; font-size: 10px;">
+            $${(Number(item.unit_price || 0) * Number(item.quantity || 1)).toFixed(2)}
+          </td>
+        </tr>
+      `).join('');
+
+      const logoHtml = businessSettings.business_logo 
+        ? `<div style="text-align: center; margin-bottom: 8px;"><img src="${businessSettings.business_logo}" style="width: 80px;" /></div>` 
+        : '';
+
+      container.innerHTML = `
+        <div style="width: 70mm; margin: 0 auto; background: white;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
             ${logoHtml}
-            <h1 style="font-size: 16px; margin: 0;" class="uppercase">${businessSettings.business_name || 'CrediParfum'}</h1>
-            ${addressHtml}
-            ${phoneHtml}
-            <p class="text-xs mt-1">${lastInvoice.date || new Date().toLocaleString()}</p>
+            <h1 style="font-size: 16px; margin: 0; text-transform: uppercase;">${businessSettings.business_name || 'CrediParfum'}</h1>
+            ${businessSettings.business_address ? `<p style="font-size: 10px; margin: 2px 0;">${businessSettings.business_address}</p>` : ''}
+            ${businessSettings.business_phone ? `<p style="font-size: 10px; margin: 2px 0;">Tel: ${businessSettings.business_phone}</p>` : ''}
+            <p style="font-size: 10px; margin: 4px 0;">${lastInvoice.date}</p>
           </div>
-          <div class="text-xs mb-2">
-            <p style="margin: 2px 0;"><strong>FACTURA:</strong> #${lastInvoice.id || '000'}</p>
-            <p style="margin: 2px 0;"><strong>CLIENTE:</strong> ${lastInvoice.client_name || 'General'}</p>
-            <p style="margin: 2px 0;"><strong>TIPO:</strong> ${lastInvoice.type || 'Contado'}</p>
+
+          <div style="font-size: 10px; margin-bottom: 8px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 2px 0;"><strong>FACTURA:</strong></td><td style="text-align: right; padding: 2px 0;">#${lastInvoice.id}</td></tr>
+              <tr><td style="padding: 2px 0;"><strong>CLIENTE:</strong></td><td style="text-align: right; padding: 2px 0;">${lastInvoice.client_name}</td></tr>
+              <tr><td style="padding: 2px 0;"><strong>TIPO:</strong></td><td style="text-align: right; padding: 2px 0;">${lastInvoice.type}</td></tr>
+            </table>
           </div>
-          <table>
+
+          <table style="width: 100%; border-collapse: collapse; border-top: 1px dashed #000; border-bottom: 1px dashed #000; margin-bottom: 8px;">
             <thead>
               <tr>
-                <th>DESCRIPCIÓN</th>
-                <th class="text-right">TOTAL</th>
+                <th style="text-align: left; padding: 4px 0; font-size: 10px;">DESC.</th>
+                <th style="text-align: right; padding: 4px 0; font-size: 10px;">TOTAL</th>
               </tr>
             </thead>
             <tbody>
               ${itemsHtml}
             </tbody>
           </table>
-          <div class="text-xs border-b pb-2" style="margin-top: 8px;">
-            <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-              <span>Subtotal:</span>
-              <span>$${(Number(lastInvoice.total || 0) - Number(lastInvoice.shipping || 0)).toFixed(2)}</span>
-            </div>
-            <div class="flex-between" style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-              <span>Envío:</span>
-              <span>$${Number(lastInvoice.shipping || 0).toFixed(2)}</span>
-            </div>
-            <div class="flex-between font-bold" style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px;">
-              <span>TOTAL:</span>
-              <span>$${Number(lastInvoice.total || 0).toFixed(2)}</span>
-            </div>
+
+          <div style="font-size: 10px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 2px 0;">Subtotal:</td>
+                <td style="text-align: right; padding: 2px 0;">$${(Number(lastInvoice.total || 0) - Number(lastInvoice.shipping || 0)).toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 2px 0;">Envío:</td>
+                <td style="text-align: right; padding: 2px 0;">$${Number(lastInvoice.shipping || 0).toFixed(2)}</td>
+              </tr>
+              <tr style="font-weight: bold; font-size: 14px;">
+                <td style="padding-top: 4px;">TOTAL:</td>
+                <td style="text-align: right; padding-top: 4px;">$${Number(lastInvoice.total || 0).toFixed(2)}</td>
+              </tr>
+            </table>
           </div>
-          <div class="text-center mt-4 text-xs">
+
+          <div style="text-align: center; margin-top: 20px; font-size: 10px;">
             <p>¡Gracias por su compra!</p>
           </div>
         </div>
-        <script>
-          window.onload = function() {
-            const element = document.getElementById('pdf-content');
-            const opt = {
-              margin: 0,
-              filename: 'Factura_${lastInvoice.id || "000"}.pdf',
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true, logging: false },
-              jsPDF: { unit: 'mm', format: [80, 250], orientation: 'portrait' }
-            };
-            
-            // Give extra time for fonts and potential images
-            setTimeout(() => {
-              if (typeof html2pdf === 'undefined') {
-                window.parent.postMessage('pdf-error:Biblioteca html2pdf no cargada', '*');
-                return;
-              }
-              html2pdf().from(element).set(opt).save().then(() => {
-                window.parent.postMessage('pdf-done', '*');
-              }).catch(err => {
-                window.parent.postMessage('pdf-error:' + err.message, '*');
-              });
-            }, 800);
-          };
-        </script>
-      </body>
-      </html>
-    `);
-    doc.close();
+      `;
 
-    const handleMessage = (event) => {
-      if (event.data === 'pdf-done') {
-        window.removeEventListener('message', handleMessage);
-        document.body.removeChild(iframe);
-      } else if (typeof event.data === 'string' && event.data.startsWith('pdf-error:')) {
-        window.removeEventListener('message', handleMessage);
-        document.body.removeChild(iframe);
-        alert("Error al generar PDF: " + event.data.replace('pdf-error:', ''));
-      }
-    };
-    window.addEventListener('message', handleMessage);
+      const opt = {
+        margin: 0,
+        filename: `Factura_${lastInvoice.id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        },
+        jsPDF: { unit: 'mm', format: [80, 250], orientation: 'portrait' }
+      };
+
+      // Wait for images to load
+      const images = container.getElementsByTagName('img');
+      const imagePromises = Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      });
+
+      Promise.all(imagePromises).then(() => {
+        setTimeout(() => {
+          window.html2pdf().from(container).set(opt).save().then(() => {
+            document.body.removeChild(container);
+          }).catch(err => {
+            console.error("PDF Error:", err);
+            document.body.removeChild(container);
+            alert("Error al generar PDF: " + err.message);
+          });
+        }, 500);
+      });
+    }
   };
 
   const handlePrint = () => {
@@ -367,7 +351,7 @@ export default function POS() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-8 text-center animate-in zoom-in-95 duration-200">
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Plus className="w-10 h-10 rotate-45" /> {/* Use as checkmark if rotated or find check */}
+              <Plus className="w-10 h-10 rotate-45" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Venta Exitosa!</h2>
             <p className="text-slate-500 mb-8">La factura ha sido registrada correctamente en el sistema.</p>
@@ -397,106 +381,89 @@ export default function POS() {
           </div>
         </div>
       )}
+
       {/* Left side: Manual Entry Form */}
-      <div className="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FileText className="w-6 h-6 text-primary-500" />
-            Crear Factura Manual
+      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-slate-200 bg-slate-50/50">
+          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+            <Plus className="w-6 h-6 text-primary-600" />
+            Nueva Factura
           </h2>
-          <p className="text-slate-500 text-sm mt-1">Ingresa los detalles del perfume vendido</p>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-6">
-          <form onSubmit={handleAddItem} className="space-y-6 max-w-xl">
-            <div className="space-y-4">
+        <form onSubmit={handleAddItem} className="p-6 space-y-5">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1.5">Descripción del Producto</label>
+              <input 
+                type="text"
+                placeholder="Nombre del perfume o servicio..."
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                className="w-full p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 shadow-sm transition-all"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Nombre del Perfume / Descripción
-                </label>
-                <input 
-                  type="text" 
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  placeholder="Ej. Carolina Herrera Good Girl 80ml"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                    Precio Unitario ($)
-                  </label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Precio Unitario</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                   <input 
-                    type="number" 
+                    type="number"
                     step="0.01"
-                    min="0"
+                    placeholder="0.00"
                     value={itemPrice}
                     onChange={(e) => setItemPrice(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                    required
+                    className="w-full p-3 pl-8 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 shadow-sm transition-all"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                    Cantidad
-                  </label>
-                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-                    <button type="button" onClick={() => setItemQuantity(Math.max(1, itemQuantity - 1))} className="p-3 hover:bg-slate-200 transition-colors">-</button>
-                    <input 
-                      type="number" 
-                      min="1"
-                      value={itemQuantity}
-                      onChange={(e) => setItemQuantity(parseInt(e.target.value) || 1)}
-                      className="w-full text-center bg-transparent focus:outline-none font-medium"
-                    />
-                    <button type="button" onClick={() => setItemQuantity(itemQuantity + 1)} className="p-3 hover:bg-slate-200 transition-colors">+</button>
-                  </div>
-                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Cantidad</label>
+                <input 
+                  type="number"
+                  min="1"
+                  value={itemQuantity}
+                  onChange={(e) => setItemQuantity(e.target.value)}
+                  className="w-full p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 shadow-sm transition-all text-center font-bold"
+                />
               </div>
             </div>
 
-            <button 
-              type="submit"
-              className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
-            >
-              <Plus className="w-5 h-5" />
-              Agregar a la Factura
-            </button>
-          </form>
-
-          <div className="mt-12 pt-8 border-t border-slate-200 max-w-xl">
-            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Truck className="w-5 h-5 text-slate-500" />
-              Costo de Envío Adicional
-            </h3>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                Monto del envío ($) - Opcional
+              <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">
+                <Truck className="w-4 h-4 text-slate-400" /> Costo de Envío (Opcional)
               </label>
-              <input 
-                type="number" 
-                step="0.01"
-                min="0"
-                value={shippingCost}
-                onChange={(e) => setShippingCost(e.target.value)}
-                placeholder="0.00"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all max-w-xs"
-              />
-              <p className="text-sm text-slate-500 mt-2">Este costo se sumará al total de la factura.</p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                <input 
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={shippingCost}
+                  onChange={(e) => setShippingCost(e.target.value)}
+                  className="w-full p-3 pl-8 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 shadow-sm transition-all"
+                />
+              </div>
             </div>
           </div>
-        </div>
+          
+          <button 
+            type="submit"
+            className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 active:scale-[0.98]"
+          >
+            <Plus className="w-5 h-5" />
+            Agregar al Carrito
+          </button>
+        </form>
       </div>
 
-      {/* Right side: Invoice Details & Checkout */}
-      <div className="w-[450px] flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
-        <div className="p-5 border-b border-slate-200 bg-slate-950 text-white">
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-primary-400" />
+      {/* Right side: Cart Summary */}
+      <div className="w-[400px] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-slate-200 bg-slate-50/50">
+          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+            <ShoppingCart className="w-6 h-6 text-slate-600" />
             Resumen de Factura
           </h2>
         </div>
