@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Printer, Download, Eye, FileText, User, Calendar, CreditCard, Banknote, X, ChevronRight, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { Search, Printer, Download, Eye, FileText, User, Calendar, CreditCard, Banknote, X, ChevronRight, TrendingUp, Clock, AlertCircle, ShieldCheck } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export default function Invoices() {
@@ -81,7 +81,9 @@ export default function Invoices() {
       // Create a clean iframe to avoid "oklch" error and ensure a renderable environment
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';
-      iframe.style.left = '-10000px';
+      iframe.style.opacity = '0';
+      iframe.style.pointerEvents = 'none';
+      iframe.style.left = '0';
       iframe.style.top = '0';
       iframe.style.width = '80mm';
       iframe.style.height = '1000px';
@@ -216,7 +218,7 @@ export default function Invoices() {
                   }).catch(err => {
                     window.parent.postMessage('pdf-error:' + err.message, '*');
                   });
-                }, 1000); // More delay for safety
+                }, 2000); // More delay for safety
               });
             };
           </script>

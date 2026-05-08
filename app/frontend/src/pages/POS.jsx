@@ -117,7 +117,9 @@ export default function POS() {
     // Create a clean iframe to avoid "oklch" error and ensure a renderable environment
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
-    iframe.style.left = '-10000px';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    iframe.style.left = '0';
     iframe.style.top = '0';
     iframe.style.width = '80mm';
     iframe.style.height = '1000px';
@@ -255,7 +257,7 @@ export default function POS() {
                 }).catch(err => {
                   window.parent.postMessage('pdf-error:' + err.message, '*');
                 });
-              }, 1000); 
+              }, 2000); 
             });
           };
         </script>
