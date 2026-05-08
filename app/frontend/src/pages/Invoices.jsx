@@ -386,21 +386,21 @@ export default function Invoices() {
                         {inv.status === 'paid' ? 'Pagada' : 'Pendiente'}
                       </span>
                     </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                    <td className="px-4 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button 
                           onClick={() => viewInvoice(inv.id)}
-                          className="p-3 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-2xl transition-all" 
+                          className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-primary-50 hover:text-primary-600 transition-all active:scale-95" 
                           title="Ver Detalle"
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => downloadInvoicePDF(inv.id)}
-                          className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all" 
+                          className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all active:scale-95" 
                           title="Descargar PDF"
                         >
-                          <Download className="w-5 h-5" />
+                          <Download className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -414,8 +414,8 @@ export default function Invoices() {
 
       {/* Modal de Detalle */}
       {isModalOpen && selectedInvoice && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 no-print">
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white rounded-t-[2.5rem] sm:rounded-[3rem] shadow-2xl w-full sm:max-w-lg overflow-hidden animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-300 no-print" style={{maxHeight: 'calc(100dvh - 80px)'}}>
             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20">
@@ -431,7 +431,7 @@ export default function Invoices() {
               </button>
             </div>
             
-            <div className="p-10 space-y-8 max-h-[60vh] overflow-y-auto">
+            <div className="p-6 sm:p-10 space-y-6 sm:space-y-8 overflow-y-auto" style={{maxHeight: 'calc(100dvh - 280px)'}}>
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Cliente</p>
@@ -474,19 +474,19 @@ export default function Invoices() {
               </div>
             </div>
 
-            <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex gap-4">
+            <div className="p-5 bg-slate-50/50 border-t border-slate-100 flex gap-3 pb-safe" style={{paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))'}}>
               <button 
                 onClick={handlePrint}
-                className="flex-1 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-900/20 active:scale-95"
+                className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-base hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 active:scale-95"
               >
-                <Printer className="w-6 h-6" />
+                <Printer className="w-5 h-5" />
                 Imprimir
               </button>
               <button 
                 onClick={() => downloadInvoicePDF(selectedInvoice.id)}
-                className="flex-1 py-5 bg-primary-600 text-white rounded-[2rem] font-black text-lg hover:bg-primary-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary-600/20 active:scale-95"
+                className="flex-1 py-4 bg-primary-600 text-white rounded-2xl font-black text-base hover:bg-primary-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20 active:scale-95"
               >
-                <Download className="w-6 h-6" />
+                <Download className="w-5 h-5" />
                 Descargar
               </button>
             </div>
