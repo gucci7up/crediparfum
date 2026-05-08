@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Save, Upload, Building, Phone, MapPin, DollarSign, Image as ImageIcon } from "lucide-react";
+import { Save, Upload, Building, Phone, MapPin, DollarSign, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { cn } from "../lib/utils";
 
 export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [settings, setSettings] = useState({
     business_name: "CrediParfum",
     business_logo: "",
@@ -30,6 +32,10 @@ export default function Settings() {
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("El logo es demasiado grande (máximo 2MB)");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setSettings({ ...settings, business_logo: reader.result });
@@ -48,9 +54,11 @@ export default function Settings() {
         body: JSON.stringify(settings),
       });
       if (res.ok) {
-        alert("Configuración guardada correctamente");
-        // Reload to apply logo to sidebar if needed (or use a context)
-        window.location.reload();
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          window.location.reload(); // Refresh to update logo in sidebar
+        }, 2000);
       } else {
         alert("Error al guardar la configuración");
       }
@@ -64,144 +72,159 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+        <p className="font-black text-slate-400 animate-pulse">Cargando configuración...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-        <p className="text-gray-600">Administra los datos de tu negocio y la apariencia de tus facturas.</p>
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      {/* Header */}
+      <div className="space-y-1">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Configuración del Negocio</h1>
+        <p className="text-slate-500 font-bold text-lg">Personaliza tu marca y los datos que aparecen en tus facturas.</p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Building className="w-5 h-5 text-indigo-600" />
-              Datos del Negocio
-            </h2>
-          </div>
-          
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Nombre del Negocio</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={settings.business_name}
-                  onChange={(e) => setSettings({ ...settings, business_name: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Ej: CrediParfum"
-                  required
-                />
-                <Building className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+      <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Main Info */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white rounded-[3rem] card-shadow border border-slate-100 overflow-hidden">
+            <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center">
+                <Building className="w-6 h-6" />
               </div>
+              <h2 className="text-xl font-black text-slate-900">Datos Generales</h2>
             </div>
+            
+            <div className="p-10 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Comercial</label>
+                  <div className="relative group">
+                    <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <input
+                      type="text"
+                      value={settings.business_name}
+                      onChange={(e) => setSettings({ ...settings, business_name: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
+                      placeholder="Nombre de tu negocio"
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Teléfono</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={settings.business_phone}
-                  onChange={(e) => setSettings({ ...settings, business_phone: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Ej: 809-000-0000"
-                />
-                <Phone className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-              </div>
-            </div>
+                <div className="space-y-3">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono de Contacto</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <input
+                      type="text"
+                      value={settings.business_phone}
+                      onChange={(e) => setSettings({ ...settings, business_phone: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
+                      placeholder="Ej: 809-555-0123"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium text-gray-700">Dirección</label>
-              <div className="relative">
-                <textarea
-                  value={settings.business_address}
-                  onChange={(e) => setSettings({ ...settings, business_address: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[80px]"
-                  placeholder="Dirección completa del negocio"
-                />
-                <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              </div>
-            </div>
+                <div className="space-y-3 md:col-span-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Dirección Física</label>
+                  <div className="relative group">
+                    <MapPin className="absolute left-4 top-5 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <textarea
+                      value={settings.business_address}
+                      onChange={(e) => setSettings({ ...settings, business_address: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all min-h-[120px]"
+                      placeholder="Dirección que aparecerá en el pie de la factura"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Símbolo de Moneda</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={settings.currency}
-                  onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Ej: $"
-                />
-                <DollarSign className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                <div className="space-y-3">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Símbolo Monetario</label>
+                  <div className="relative group">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-600 transition-colors" />
+                    <input
+                      type="text"
+                      value={settings.currency}
+                      onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all"
+                      placeholder="Ej: RD$, $, €"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-indigo-600" />
-              Logo del Negocio
-            </h2>
-          </div>
-          
-          <div className="p-6">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-48 h-48 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative group">
-                {settings.business_logo ? (
-                  <img src={settings.business_logo} alt="Logo preview" className="w-full h-full object-contain p-2" />
-                ) : (
-                  <div className="text-center p-4">
-                    <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400">Sin Logo</p>
+        {/* Right Column: Logo & Save */}
+        <div className="space-y-8">
+          <div className="bg-white rounded-[3rem] card-shadow border border-slate-100 overflow-hidden">
+            <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                <ImageIcon className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-black text-slate-900">Identidad</h2>
+            </div>
+            
+            <div className="p-10 space-y-8 text-center">
+              <div className="relative group mx-auto w-48 h-48">
+                <div className="w-48 h-48 bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-slate-100 flex items-center justify-center overflow-hidden transition-all group-hover:border-primary-200 group-hover:bg-primary-50/30">
+                  {settings.business_logo ? (
+                    <img src={settings.business_logo} alt="Logo" className="w-full h-full object-contain p-6" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-slate-300">
+                      <ImageIcon className="w-12 h-12" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Sin Logo</span>
+                    </div>
+                  )}
+                </div>
+                <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-primary-600/0 group-hover:bg-primary-600/80 rounded-[2.5rem] transition-all opacity-0 group-hover:opacity-100">
+                  <div className="text-white flex flex-col items-center gap-2 scale-90 group-hover:scale-100 transition-transform">
+                    <Upload className="w-8 h-8" />
+                    <span className="font-black text-xs uppercase tracking-widest">Cambiar</span>
                   </div>
-                )}
-                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                  <Upload className="w-8 h-8 text-white" />
                   <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                 </label>
               </div>
-              
-              <div className="flex-1 space-y-4">
-                <h3 className="font-medium text-gray-900">Personaliza tu marca</h3>
-                <ul className="text-sm text-gray-500 space-y-2">
-                  <li>• El logo aparecerá en el menú lateral y en todas las facturas impresas.</li>
-                  <li>• Recomendado: Imagen cuadrada con fondo transparente (PNG).</li>
-                  <li>• Tamaño máximo recomendado: 500x500 píxeles.</li>
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => document.querySelector('input[type="file"]').click()}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-medium flex items-center gap-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  Subir nuevo logo
-                </button>
+
+              <div className="space-y-4">
+                <p className="text-sm font-bold text-slate-500 leading-relaxed">
+                  Sube tu logo para personalizar la interfaz y las facturas impresas.
+                </p>
+                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-left">
+                  <div className="flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                    <p className="text-[11px] font-bold text-amber-800 leading-normal uppercase tracking-wider">
+                      Usa PNG transparente para mejores resultados en el ticket.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-end pt-4">
           <button
             type="submit"
             disabled={saving}
-            className="px-8 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2 font-semibold disabled:opacity-50"
+            className={cn(
+              "w-full py-6 rounded-[2rem] font-black text-xl flex items-center justify-center gap-4 shadow-2xl transition-all active:scale-95 disabled:opacity-70",
+              showSuccess 
+                ? "bg-emerald-500 text-white shadow-emerald-500/30" 
+                : "bg-primary-600 text-white hover:bg-primary-700 shadow-primary-600/30"
+            )}
           >
             {saving ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <Loader2 className="w-7 h-7 animate-spin" />
+            ) : showSuccess ? (
+              <CheckCircle2 className="w-7 h-7" />
             ) : (
-              <Save className="w-5 h-5" />
+              <Save className="w-7 h-7" />
             )}
-            Guardar Cambios
+            {saving ? "Guardando..." : showSuccess ? "¡Guardado!" : "Guardar Cambios"}
           </button>
         </div>
       </form>

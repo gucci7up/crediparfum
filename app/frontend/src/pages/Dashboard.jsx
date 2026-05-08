@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
-import { DollarSign, Users, Package, ArrowUpRight, ArrowDownRight, Clock, ShoppingCart } from "lucide-react";
+import { DollarSign, Users, ArrowUpRight, ArrowDownRight, Clock, ShoppingCart, ChevronRight, TrendingUp } from "lucide-react";
 import { cn } from "../lib/utils";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const chartData = [
+  { name: 'Lun', sales: 400 },
+  { name: 'Mar', sales: 300 },
+  { name: 'Mie', sales: 600 },
+  { name: 'Jue', sales: 800 },
+  { name: 'Vie', sales: 500 },
+  { name: 'Sab', sales: 900 },
+  { name: 'Dom', sales: 700 },
+];
 
 export default function Dashboard() {
   const [data, setData] = useState({
     stats: [
-      { name: 'Ingresos Mensuales', value: '$0.00', trend: '0%', isPositive: true, icon: DollarSign, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
-      { name: 'Cuentas por Cobrar', value: '$0.00', trend: '0%', isPositive: true, icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
-      { name: 'Clientes Activos', value: '0', trend: '0%', isPositive: true, icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/10' }
+      { id: 'monthly_income', name: 'Ingresos Mensuales', value: '$0.00', trend: '0%', isPositive: true, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-100' },
+      { id: 'accounts_receivable', name: 'Cuentas por Cobrar', value: '$0.00', trend: '0%', isPositive: true, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' },
+      { id: 'active_clients', name: 'Clientes Activos', value: '0', trend: '0%', isPositive: true, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' }
     ],
     recentActivity: []
   });
@@ -17,11 +28,10 @@ export default function Dashboard() {
       .then(res => res.json())
       .then(resData => {
         if (resData.stats) {
-          // Map icons back to stats
           const statsWithIcons = resData.stats.map(s => {
-            if (s.id === 'monthly_income') return { ...s, icon: DollarSign, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' };
-            if (s.id === 'accounts_receivable') return { ...s, icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-500/10' };
-            if (s.id === 'active_clients') return { ...s, icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/10' };
+            if (s.id === 'monthly_income') return { ...s, icon: DollarSign, color: 'text-primary-600', bgColor: 'bg-primary-100' };
+            if (s.id === 'accounts_receivable') return { ...s, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' };
+            if (s.id === 'active_clients') return { ...s, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-100' };
             return s;
           });
           setData({
@@ -30,99 +40,178 @@ export default function Dashboard() {
           });
         }
       })
-      .catch(err => {
-        console.error("Error fetching dashboard stats:", err);
-      });
+      .catch(err => console.error("Error fetching dashboard stats:", err));
   }, []);
 
+  const mainStat = data.stats.find(s => s.id === 'monthly_income') || data.stats[0];
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Resumen General</h1>
-        <p className="text-slate-500 mt-1">Monitorea el estado de tu negocio y ventas recientes.</p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Banner - Inspired by Design */}
+      <div className="relative bg-primary-600 rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl shadow-primary-600/30 overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-400/20 rounded-full translate-y-16 -translate-x-16 blur-2xl" />
+        
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-primary-100 font-bold tracking-wide uppercase text-sm">Ventas del Mes</span>
+            </div>
+            <div className="space-y-1">
+               <h1 className="text-5xl lg:text-6xl font-black tracking-tight">{mainStat.value}</h1>
+               <div className="flex items-center gap-2 text-primary-100">
+                 <TrendingUp className="w-5 h-5" />
+                 <span className="font-bold">+{mainStat.trend}</span>
+                 <span className="text-primary-200/60 font-medium">vs mes pasado</span>
+               </div>
+            </div>
+          </div>
+
+          <div className="flex -space-x-3">
+             {[1,2,3,4].map(i => (
+               <div key={i} className="w-12 h-12 rounded-2xl border-4 border-primary-600 overflow-hidden bg-slate-200 shadow-xl">
+                 <img src={`https://i.pravatar.cc/150?u=${i+10}`} alt="User" className="w-full h-full object-cover" />
+               </div>
+             ))}
+             <div className="w-12 h-12 rounded-2xl border-4 border-primary-600 bg-primary-500 flex items-center justify-center text-xs font-bold shadow-xl">
+               +12
+             </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.stats.map((stat) => {
+      {/* Horizontal Stats Scroll */}
+      <div className="flex overflow-x-auto pb-4 gap-6 no-scrollbar -mx-5 px-5 lg:mx-0 lg:px-0">
+        {data.stats.filter(s => s.id !== 'monthly_income').map((stat) => {
           const Icon = stat.icon || DollarSign;
           return (
-            <div key={stat.name} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn("p-3 rounded-xl", stat.bgColor)}>
-                  <Icon className={cn("w-6 h-6", stat.color)} />
+            <div key={stat.name} className="flex-shrink-0 w-72 bg-white p-6 rounded-[2rem] border border-slate-200/50 shadow-sm card-shadow transition-all hover:translate-y-[-4px]">
+              <div className="flex items-center justify-between mb-6">
+                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center", stat.bgColor)}>
+                  <Icon className={cn("w-7 h-7", stat.color)} />
                 </div>
                 <div className={cn(
-                  "flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-md",
-                  stat.isPositive ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"
+                  "flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full",
+                  stat.isPositive ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"
                 )}>
-                  {stat.isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                   {stat.trend}
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500 mb-1">{stat.name}</p>
-                <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
+                <p className="text-sm font-bold text-slate-400 mb-1">{stat.name}</p>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{stat.value}</h3>
               </div>
             </div>
           );
         })}
+        {/* Placeholder for "Nature" type card in design */}
+        <div className="flex-shrink-0 w-72 bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20 flex flex-col justify-between transition-all hover:translate-y-[-4px]">
+            <div className="flex justify-between items-start">
+               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <ShoppingCart className="w-6 h-6" />
+               </div>
+               <ArrowUpRight className="w-6 h-6 opacity-60" />
+            </div>
+            <div>
+               <p className="text-indigo-100 font-bold text-sm mb-1">Nueva Venta</p>
+               <h3 className="text-xl font-black">Registrar ahora</h3>
+            </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Actividad Reciente</h2>
-            <button className="text-sm font-medium text-primary-600 hover:text-primary-700">Ver todo</button>
-          </div>
-          <div className="p-6">
-            <div className="space-y-6">
-              {data.recentActivity.length === 0 ? (
-                <p className="text-slate-500 text-center py-4 text-sm">No hay actividad reciente</p>
-              ) : (
-                data.recentActivity.map((tx) => (
-                  <div key={tx.tx_id} className="flex items-center justify-between group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-50 group-hover:text-primary-600 group-hover:border-primary-100 transition-colors">
-                        {tx.type === 'Venta' ? <ShoppingCart className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{tx.client}</p>
-                        <p className="text-xs text-slate-500">{tx.tx_id} • {tx.date}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-slate-900">${parseFloat(tx.amount).toFixed(2)}</p>
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1",
-                        tx.status === 'paid' || tx.status === 'Pagado' ? "bg-emerald-100 text-emerald-800" :
-                        tx.status === 'Abono' ? "bg-blue-100 text-blue-800" :
-                        "bg-amber-100 text-amber-800"
-                      )}>
-                        {tx.status === 'paid' ? 'Pagado' : tx.status === 'pending' ? 'Pendiente' : tx.status}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
+        {/* Spending Overview Chart */}
+        <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-200/50 p-8 card-shadow">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+               <h2 className="text-xl font-black text-slate-900">Flujo de Ventas</h2>
+               <p className="text-sm font-bold text-slate-400">Últimos 7 días</p>
             </div>
+            <div className="flex gap-2">
+               <button className="px-4 py-2 bg-slate-100 rounded-full text-xs font-black text-slate-600">Día</button>
+               <button className="px-4 py-2 bg-primary-100 rounded-full text-xs font-black text-primary-600">Sem</button>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 700}} 
+                  dy={10}
+                />
+                <YAxis hide />
+                <Tooltip 
+                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)'}}
+                  itemStyle={{fontWeight: 'bold', color: '#7c3aed'}}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="sales" 
+                  stroke="#7c3aed" 
+                  strokeWidth={4} 
+                  fillOpacity={1} 
+                  fill="url(#colorSales)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="space-y-8">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Package className="w-32 h-32" />
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-lg font-bold mb-2">Punto de Venta</h3>
-              <p className="text-slate-300 text-sm mb-6">Genera una nueva factura o registra un abono de forma rápida.</p>
-              <button className="w-full py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-slate-50 transition-colors">
-                Nueva Factura
-              </button>
-            </div>
+        {/* Latest Activity */}
+        <div className="bg-white rounded-[2.5rem] border border-slate-200/50 card-shadow flex flex-col">
+          <div className="p-8 pb-4 flex items-center justify-between">
+            <h2 className="text-xl font-black text-slate-900">Actividad</h2>
+            <button className="text-primary-600 hover:bg-primary-50 p-2 rounded-xl transition-colors">
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-8 pt-0 space-y-6">
+            {data.recentActivity.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4 py-10">
+                 <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center">
+                    <ShoppingCart className="w-8 h-8 text-slate-200" />
+                 </div>
+                 <p className="font-bold text-sm">Sin transacciones</p>
+              </div>
+            ) : (
+              data.recentActivity.map((tx) => (
+                <div key={tx.tx_id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 transition-all group-hover:bg-primary-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary-600/30">
+                      {tx.type === 'Venta' ? <ShoppingCart className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-slate-900 line-clamp-1">{tx.client}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{tx.date.split(',')[0]}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-900">${parseFloat(tx.amount).toFixed(2)}</p>
+                    <span className={cn(
+                      "text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full mt-1 inline-block",
+                      tx.status === 'paid' || tx.status === 'Pagado' ? "text-emerald-600 bg-emerald-50" :
+                      tx.status === 'Abono' ? "text-blue-600 bg-blue-50" :
+                      "text-amber-600 bg-amber-50"
+                    )}>
+                      {tx.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
