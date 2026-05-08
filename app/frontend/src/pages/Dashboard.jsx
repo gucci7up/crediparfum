@@ -119,8 +119,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      </div>
-
       {/* Notifications and Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Notifications / Alerts */}
